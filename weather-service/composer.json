@@ -1,0 +1,22 @@
+{
+    "name": "daner/weather-service",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Daner Sharifi",
+            "email": "daner.sharifi.official@gmail.com"
+        }
+    ],
+    "require": {
+        "slim/slim": "^4",
+        "slim/psr7": "^1",
+        "php-di/php-di": "^7",
+        "monolog/monolog": "^3",
+        "symfony/http-client": "^7",
+        "symfony/cache": "^7",
+        "symfony/validator": "^7"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11"
+    }
+}
