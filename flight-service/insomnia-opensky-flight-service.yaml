@@ -1,0 +1,118 @@
+_type: export
+__export_format: 4
+__export_date: "2026-01-09T14:45:37.876556+00:00"
+__export_source: "insomnia.desktop.app:v2024.5.0"
+resources:
+  - _id: wrk_opensky_flight_service
+    parentId: null
+    modified: 0
+    created: 0
+    name: "OpenSky Flight Service (Flask)"
+    description: "Tests pour l'API locale /flights"
+    scope: collection
+    _type: workspace
+
+  - _id: env_base
+    parentId: wrk_opensky_flight_service
+    modified: 0
+    created: 0
+    name: "Base Environment"
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 0
+    _type: environment
+
+  - _id: fld_flights
+    parentId: wrk_opensky_flight_service
+    modified: 0
+    created: 0
+    name: "Flights"
+    description: ""
+    environment: {}
+    environmentPropertyOrder: null
+    metaSortKey: 0
+    _type: request_group
+
+  - _id: req_flights_global
+    parentId: fld_flights
+    modified: 0
+    created: 0
+    url: "http://localhost:5000/flights"
+    name: "GET flights (global)"
+    description: "Renvoie la liste des avions en vol (monde entier)."
+    method: GET
+    body: {}
+    parameters: []
+    headers:
+      - name: Accept
+        value: application/json
+    authentication: {}
+    metaSortKey: 0
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+
+  - _id: req_flights_nantes_bbox
+    parentId: fld_flights
+    modified: 0
+    created: 0
+    url: "http://localhost:5000/flights"
+    name: "GET flights (bbox Nantes)"
+    description: "Même endpoint, mais limité à une bounding box (moins de données et moins de crédits côté OpenSky)."
+    method: GET
+    body: {}
+    parameters:
+      - name: lamin
+        value: "46.9"
+      - name: lomin
+        value: "-2.3"
+      - name: lamax
+        value: "47.5"
+      - name: lomax
+        value: "-1.2"
+    headers:
+      - name: Accept
+        value: application/json
+    authentication: {}
+    metaSortKey: 1
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+
+  - _id: req_flights_extended
+    parentId: fld_flights
+    modified: 0
+    created: 0
+    url: "http://localhost:5000/flights"
+    name: "GET flights (extended=1)"
+    description: "Demande à OpenSky d'inclure 'category' si dispo (extended=1)."
+    method: GET
+    body: {}
+    parameters:
+      - name: extended
+        value: "1"
+    headers:
+      - name: Accept
+        value: application/json
+    authentication: {}
+    metaSortKey: 2
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
