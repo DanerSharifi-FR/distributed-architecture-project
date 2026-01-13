@@ -1,6 +1,6 @@
 # Hey Thomas 👋
 
-J'ai essaye de build ton service et ca compile pas. Voici les trucs a fix :
+J'ai essaye de build ton service et ca compile pas. Voici les trucs a fix enfin selon chatgpt vu que je comprend rien à tout code (t nul bouuuuuuuu) :
 
 ## 1. Erreur de compilation dans OwmService.kt
 
