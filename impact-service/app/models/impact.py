@@ -2,7 +2,6 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, Field
-from beanie import Document
 
 class ImpactSeverity(str, Enum):
     LOW = "low"
@@ -41,7 +40,7 @@ class SatelliteContext(BaseModel):
     cloud_coverage: Optional[float] = None
     metadata: Optional[dict] = None
 
-class Impact(Document):
+class Impact(BaseModel):
     flight_id: str
     callsign: Optional[str] = None
     position: FlightPosition
@@ -52,5 +51,3 @@ class Impact(Document):
     description: str
     recommendations: list[str] = []
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    class Settings:
-        name = "impacts"

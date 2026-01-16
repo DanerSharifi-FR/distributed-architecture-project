@@ -1,25 +1,61 @@
+"""
+Weather Client
+==============
+Client pour récupérer les risques météo.
+
+Actuellement en MODE MOCK car weather-service n'est pas encore prêt.
+"""
+
 import random
 from datetime import datetime
-from typing import Optional
-from app.config import get_settings
 from app.models.impact import WeatherRisk, WeatherHazard
+from app.config import get_settings
 
-class WeatherClient:
-    def __init__(self):
-        self.use_mock = get_settings().use_mock_weather
 
-    async def get_weather_risk(self, lat, lon, alt, timestamp=None) -> WeatherRisk:
-        timestamp = timestamp or datetime.utcnow()
-        score = random.uniform(0.2, 0.8)
-        hazards = []
-        for h, t in [("thunderstorm", 0.7), ("turbulence", 0.5), ("icing", 0.6)]:
-            if random.random() > t:
-                hazards.append(WeatherHazard(type=h, severity=random.uniform(0.3, 0.9)))
-        if hazards: score = max(score, max(h.severity for h in hazards) * 0.8)
-        return WeatherRisk(latitude=lat, longitude=lon, altitude=alt, timestamp=timestamp, overall_score=round(score, 3), hazards=hazards)
+async def get_weather_risk(lat: float, lon: float, alt: float) -> WeatherRisk:
+    """
+    Récupère les risques météo pour une position.
+    
+    Args:
+        lat: Latitude
+        lon: Longitude  
+        alt: Altitude en pieds
+    
+    Returns:
+        WeatherRisk avec score global et liste de dangers
+    """
+    settings = get_settings()
+    
+    if settings.use_mock_weather:
+        return _mock_weather_risk(lat, lon, alt)
+    else:
+        # TODO: Appeler le vrai weather-service quand il sera prêt
+        # return await _fetch_weather_risk(lat, lon, alt)
+        return _mock_weather_risk(lat, lon, alt)
 
-_client = None
-def get_weather_client():
-    global _client
-    if not _client: _client = WeatherClient()
-    return _client
+
+def _mock_weather_risk(lat: float, lon: float, alt: float) -> WeatherRisk:
+    """Génère des données météo simulées."""
+    
+    # Types de dangers possibles
+    hazard_types = ["thunderstorm", "turbulence", "icing", "wind_shear", "low_visibility"]
+    
+    # Générer 1-3 dangers aléatoires
+    num_hazards = random.randint(1, 3)
+    hazards = [
+        WeatherHazard(
+            type=random.choice(hazard_types),
+            severity=round(random.uniform(0.3, 0.9), 2),
+            description=f"Détecté à {alt}ft"
+        )
+        for _ in range(num_hazards)
+    ]
+    
+    return WeatherRisk(
+        latitude=lat,
+        longitude=lon,
+        altitude=alt,
+        timestamp=datetime.utcnow(),
+        overall_score=round(random.uniform(0.5, 1.0), 2),
+        hazards=hazards
+    )

@@ -1,30 +1,62 @@
+"""
+Flight Client
+=============
+Client pour récupérer les vols depuis flight-service.
+"""
+
 from datetime import datetime
-from typing import Optional
 import httpx
-from app.config import get_settings
 from app.models.impact import FlightPosition
+from app.config import get_settings
 
-class FlightClient:
-    def __init__(self):
-        self.base_url = get_settings().flight_service_url
 
-    async def get_flights(self, lamin=None, lomin=None, lamax=None, lomax=None) -> list[FlightPosition]:
-        params = {}
-        if all(v is not None for v in [lamin, lomin, lamax, lomax]):
-            params = {"lamin": lamin, "lomin": lomin, "lamax": lamax, "lomax": lomax}
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(f"{self.base_url}/flights", params=params)
+async def get_flights(
+    lamin: float = None,
+    lomin: float = None, 
+    lamax: float = None,
+    lomax: float = None
+) -> list[FlightPosition]:
+    """
+    Récupère les vols actuels depuis flight-service.
+    
+    Args:
+        lamin, lomin, lamax, lomax: Bounding box optionnelle
+    
+    Returns:
+        Liste de positions de vol
+    """
+    settings = get_settings()
+    url = f"{settings.flight_service_url}/flights"
+    
+    # Ajouter les paramètres de bounding box si fournis
+    params = {}
+    if lamin: params["lamin"] = lamin
+    if lomin: params["lomin"] = lomin
+    if lamax: params["lamax"] = lamax
+    if lomax: params["lomax"] = lomax
+    
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.get(url, params=params)
             response.raise_for_status()
-            return [FlightPosition(
-                flight_id=f["icao24"], callsign=f.get("callsign"),
-                latitude=f["lat"], longitude=f["lon"],
-                altitude=f.get("baro_altitude_m") or f.get("geo_altitude_m") or 0,
-                speed=f.get("velocity_mps"), heading=f.get("true_track_deg"),
+            data = response.json()
+        
+        # Convertir en FlightPosition
+        flights = []
+        for f in data.get("flights", []):
+            flights.append(FlightPosition(
+                flight_id=f.get("icao24", "unknown"),
+                callsign=f.get("callsign"),
+                latitude=f.get("latitude", 0),
+                longitude=f.get("longitude", 0),
+                altitude=f.get("altitude", 0),
+                speed=f.get("velocity"),
+                heading=f.get("heading"),
                 timestamp=datetime.utcnow()
-            ) for f in response.json()]
-
-_client = None
-def get_flight_client():
-    global _client
-    if not _client: _client = FlightClient()
-    return _client
+            ))
+        
+        return flights
+        
+    except Exception as e:
+        print(f"⚠️ Erreur flight-service: {e}")
+        return []

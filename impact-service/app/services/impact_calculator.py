@@ -1,26 +1,68 @@
-from datetime import datetime
+"""
+Impact Calculator
+=================
+Logique métier pour calculer l'impact météo d'un vol.
+"""
+
 from app.models.impact import Impact, ImpactSeverity, FlightPosition
-from app.services.weather_client import get_weather_client
-from app.services.satellite_client import get_satellite_client
+from app.services.weather_client import get_weather_risk
+from app.services.satellite_client import get_satellite_context
 
-class ImpactCalculator:
-    def __init__(self):
-        self.weather = get_weather_client()
-        self.satellite = get_satellite_client()
 
-    async def calculate_impact(self, pos: FlightPosition) -> Impact:
-        weather = await self.weather.get_weather_risk(pos.latitude, pos.longitude, pos.altitude)
-        satellite = await self.satellite.get_satellite_context(pos.latitude, pos.longitude)
-        score = weather.overall_score * 60 + min(len(weather.hazards) * 10, 30) + (satellite.cloud_coverage or 0) * 0.1
-        score = min(score, 100)
-        sev = ImpactSeverity.LOW if score < 25 else ImpactSeverity.MEDIUM if score < 50 else ImpactSeverity.HIGH if score < 75 else ImpactSeverity.CRITICAL
-        hazards = ", ".join(h.type for h in weather.hazards) or "aucun"
-        return Impact(flight_id=pos.flight_id, callsign=pos.callsign, position=pos, weather_risk=weather, satellite_context=satellite,
-            severity=sev, impact_score=round(score, 2), description=f"Vol {pos.flight_id} - Dangers: {hazards}",
-            recommendations=["Vigilance"] if sev in [ImpactSeverity.HIGH, ImpactSeverity.CRITICAL] else [])
-
-_calc = None
-def get_impact_calculator():
-    global _calc
-    if not _calc: _calc = ImpactCalculator()
-    return _calc
+async def calculate_impact(position: FlightPosition) -> Impact:
+    """
+    Calcule l'impact météo pour une position de vol.
+    
+    Étapes:
+    1. Récupère les risques météo (weather-service ou mock)
+    2. Récupère le contexte satellite (satellite-service ou mock)
+    3. Calcule un score de 0 à 100
+    4. Détermine la sévérité (low/medium/high/critical)
+    """
+    
+    # 1. Récupérer les données météo et satellite
+    weather = await get_weather_risk(position.latitude, position.longitude, position.altitude)
+    satellite = await get_satellite_context(position.latitude, position.longitude)
+    
+    # 2. Calculer le score d'impact (0-100)
+    #    - 60% basé sur le score météo global
+    #    - 30% basé sur le nombre de dangers (max 3)
+    #    - 10% basé sur la couverture nuageuse
+    score = (
+        weather.overall_score * 60 +                    # Score météo
+        min(len(weather.hazards) * 10, 30) +            # Nombre de dangers
+        (satellite.cloud_coverage or 0) * 0.1           # Couverture nuageuse
+    )
+    score = min(score, 100)  # Plafonner à 100
+    
+    # 3. Déterminer la sévérité
+    if score < 25:
+        severity = ImpactSeverity.LOW
+    elif score < 50:
+        severity = ImpactSeverity.MEDIUM
+    elif score < 75:
+        severity = ImpactSeverity.HIGH
+    else:
+        severity = ImpactSeverity.CRITICAL
+    
+    # 4. Créer la description
+    hazard_names = ", ".join(h.type for h in weather.hazards) or "aucun"
+    description = f"Vol {position.flight_id} - Dangers: {hazard_names}"
+    
+    # 5. Recommandations
+    recommendations = []
+    if severity in [ImpactSeverity.HIGH, ImpactSeverity.CRITICAL]:
+        recommendations.append("Vigilance requise")
+    
+    # 6. Retourner l'impact
+    return Impact(
+        flight_id=position.flight_id,
+        callsign=position.callsign,
+        position=position,
+        weather_risk=weather,
+        satellite_context=satellite,
+        severity=severity,
+        impact_score=round(score, 2),
+        description=description,
+        recommendations=recommendations
+    )
