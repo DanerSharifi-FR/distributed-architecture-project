@@ -1,7 +1,6 @@
 package com.archi.satellite.service
 
 import com.archi.satellite.config.SatelliteProperties
-import io.netty.handler.codec.bytes.ByteArrayEncoder
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
@@ -10,10 +9,7 @@ import org.springframework.web.reactive.function.client.bodyToMono
 import java.lang.Math.toRadians
 import kotlin.math.floor
 import org.springframework.web.reactive.function.client.awaitBody
-import org.springframework.web.reactive.function.client.bodyToMono
 import org.springframework.web.server.ResponseStatusException
-import java.lang.Math.pow
-import java.lang.Math.powExact
 import kotlin.math.cos
 import kotlin.math.ln
 import kotlin.math.pow

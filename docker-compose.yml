@@ -1,4 +1,11 @@
 services:
+  satellite:
+    build:
+      context: satellite-service
+      dockerfile: Dockerfile
+    ports:
+      - '8080:8080'
+
   flight-service:
     build: ./flight-service
     ports:
@@ -30,8 +37,29 @@ services:
     networks:
       - app-network
 
+  minio:
+    image: 'minio/minio:latest'
+    ports:
+      - '9000:9000'
+      - '8900:8900'
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: password
+    volumes:
+      - 'minio:/data/minio'
+    command: 'minio server /data/minio --console-address ":8900"'
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - '-f'
+        - 'http://localhost:9000/minio/health/live'
+      retries: 3
+      timeout: 5s
+
 networks:
   app-network:
 
 volumes:
   mongo-data:
+  minio:
