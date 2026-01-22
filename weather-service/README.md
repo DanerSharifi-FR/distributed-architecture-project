@@ -25,6 +25,52 @@ curl -i http://localhost:8080/readyz
   - Internal OpenWeather One Call 3.0 proxy with caching.
   - Requires `X-Internal-Token` header when `INTERNAL_TOKEN` is set.
 
+## Install & Run
+
+Prereqs:
+- Docker + Docker Compose, or
+- PHP 8.3+ + Composer + Redis
+
+Local (Docker) quickstart:
+
+```bash
+cp .env.example .env
+```
+
+Fill required values:
+- `OPENWEATHER_API_KEY` (required)
+- `INTERNAL_TOKEN` (required in prod; recommended always)
+
+```bash
+docker compose up --build
+```
+
+```bash
+curl -i http://localhost:8080/healthz
+curl -i http://localhost:8080/readyz
+curl -i -H "X-Internal-Token: $INTERNAL_TOKEN" "http://localhost:8080/v1/onecall?lat=43.6&lon=1.44"
+```
+
+Local (no Docker):
+
+```bash
+composer install
+```
+
+Start Redis, then:
+
+```bash
+export OPENWEATHER_API_KEY=...
+export INTERNAL_TOKEN=...
+php -S 0.0.0.0:8080 -t public
+```
+
+Troubleshooting:
+- `401` => missing/invalid `X-Internal-Token`
+- `429` => rate limit exceeded
+- `502` => upstream issue (check OpenWeather subscription/activation + logs)
+- `/readyz` `503` => Redis down or `INTERNAL_TOKEN` missing in prod
+
 ## Environment variables
 
 Create a local `.env` from `.env.example` and fill in values. Never commit secrets; use CI secret stores for production.
@@ -64,6 +110,35 @@ Logs are emitted in JSON-ish format to stdout. Common fields:
 - `APP_ENV=prod` requires a non-empty `INTERNAL_TOKEN`; readiness will report `503` if missing.
 - Rate limiting uses Redis: `RATE_LIMIT_GLOBAL_PER_MIN` and `RATE_LIMIT_CALLER_PER_MIN`.
 - All errors are returned as JSON. In dev, responses may include a `debug` object; in prod, debug details are omitted.
+
+## Security
+
+- `INTERNAL_TOKEN` is a shared secret for service-to-service auth on `/v1/*`.
+- Never commit `.env` files or secrets.
+- In production, `APP_ENV=prod` requires `INTERNAL_TOKEN` to be set.
+
+## Token generation
+
+```bash
+openssl rand -hex 32
+```
+
+Alternative:
+
+```bash
+python -c 'import secrets; print(secrets.token_hex(32))'
+```
+
+Add to `.env`:
+
+```
+INTERNAL_TOKEN=<generated>
+```
+
+## Helper scripts
+
+- `scripts/gen-token.sh`: prints a token and a sample `.env` line.
+- `scripts/setup-env.sh`: copies `.env.example` to `.env` if missing.
 
 ## Troubleshooting
 

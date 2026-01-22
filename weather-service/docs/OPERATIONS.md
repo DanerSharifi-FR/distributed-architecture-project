@@ -33,3 +33,8 @@
 ## Readiness in prod
 
 - When `APP_ENV=prod`, `INTERNAL_TOKEN` must be set or `/readyz` returns `503`.
+
+## Logging and request correlation
+
+- Incoming `X-Request-Id` is echoed in responses and included in logs.
+- Look for `extra.request_id` in JSON logs to trace a request.
