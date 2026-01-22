@@ -151,12 +151,12 @@ See `docs/TECHNICAL.md` for request flow, Redis usage, and configuration details
 
 ## Documentation index
 
-- `docs/ARCHITECTURE.md`
-- `docs/API.md`
-- `docs/DECISIONS.md`
-- `docs/OPERATIONS.md`
-- `docs/TECHNICAL.md`
-- `docs/openapi.yaml`
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- [docs/API.md](docs/API.md)
+- [docs/DECISIONS.md](docs/DECISIONS.md)
+- [docs/OPERATIONS.md](docs/OPERATIONS.md)
+- [docs/TECHNICAL.md](docs/TECHNICAL.md)
+- [docs/openapi.yaml](docs/openapi.yaml)
 
 ## Troubleshooting
 
