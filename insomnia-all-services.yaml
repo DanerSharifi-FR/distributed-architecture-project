@@ -1,0 +1,309 @@
+_type: export
+__export_format: 4
+__export_date: "2026-01-22T12:00:00.000Z"
+__export_source: "insomnia.desktop.app:v2024.5.0"
+resources:
+  - _id: wrk_all_services
+    parentId: null
+    modified: 0
+    created: 0
+    name: "Aviation Weather Impact - All Services"
+    description: "Collection complète pour tester tous les micro-services"
+    scope: collection
+    _type: workspace
+
+  - _id: env_base
+    parentId: wrk_all_services
+    modified: 0
+    created: 0
+    name: "Base Environment"
+    data:
+      impact_url: "http://localhost:8000"
+      flight_url: "http://localhost:5001"
+      weather_url: "http://localhost:5002"
+      satellite_url: "http://localhost:8080"
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 0
+    _type: environment
+
+  # ==================== IMPACT SERVICE (Clovis) ====================
+  - _id: fld_impact
+    parentId: wrk_all_services
+    modified: 0
+    created: 0
+    name: "🎯 Impact Service (Clovis)"
+    description: "Cerveau - calcule les impacts météo"
+    _type: request_group
+
+  - _id: req_impact_health
+    parentId: fld_impact
+    modified: 0
+    created: 0
+    url: "{{ _.impact_url }}/api/health"
+    name: "Health Check"
+    method: GET
+    body: {}
+    headers: []
+    authentication: {}
+    metaSortKey: 0
+    _type: request
+
+  - _id: req_impact_create
+    parentId: fld_impact
+    modified: 0
+    created: 0
+    url: "{{ _.impact_url }}/api/impacts"
+    name: "POST Create Impact"
+    description: "Crée un impact manuellement"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "flight_id": "AF1234",
+          "callsign": "AIR FRANCE 1234",
+          "latitude": 48.8566,
+          "longitude": 2.3522,
+          "altitude": 10000
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    authentication: {}
+    metaSortKey: 1
+    _type: request
+
+  - _id: req_impact_list
+    parentId: fld_impact
+    modified: 0
+    created: 0
+    url: "{{ _.impact_url }}/api/impacts"
+    name: "GET List Impacts"
+    method: GET
+    body: {}
+    parameters:
+      - name: limit
+        value: "50"
+    headers: []
+    authentication: {}
+    metaSortKey: 2
+    _type: request
+
+  - _id: req_impact_get
+    parentId: fld_impact
+    modified: 0
+    created: 0
+    url: "{{ _.impact_url }}/api/impacts/IMPACT_ID_HERE"
+    name: "GET Impact by ID"
+    method: GET
+    body: {}
+    headers: []
+    authentication: {}
+    metaSortKey: 3
+    _type: request
+
+  - _id: req_impact_delete
+    parentId: fld_impact
+    modified: 0
+    created: 0
+    url: "{{ _.impact_url }}/api/impacts/IMPACT_ID_HERE"
+    name: "DELETE Impact"
+    method: DELETE
+    body: {}
+    headers: []
+    authentication: {}
+    metaSortKey: 4
+    _type: request
+
+  - _id: req_impact_analyze
+    parentId: fld_impact
+    modified: 0
+    created: 0
+    url: "{{ _.impact_url }}/api/analyze-flights"
+    name: "POST Analyze Flights (Real-time)"
+    description: "Analyse les vols depuis flight-service"
+    method: POST
+    body: {}
+    parameters:
+      - name: limit
+        value: "10"
+    headers: []
+    authentication: {}
+    metaSortKey: 5
+    _type: request
+
+  - _id: req_impact_stats
+    parentId: fld_impact
+    modified: 0
+    created: 0
+    url: "{{ _.impact_url }}/api/stats"
+    name: "GET Stats"
+    method: GET
+    body: {}
+    headers: []
+    authentication: {}
+    metaSortKey: 6
+    _type: request
+
+  - _id: req_impact_graphql
+    parentId: fld_impact
+    modified: 0
+    created: 0
+    url: "{{ _.impact_url }}/graphql"
+    name: "GraphQL: List Impacts"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "query": "{ impacts(limit: 10) { id flightId callsign severity impactScore description } }"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    authentication: {}
+    metaSortKey: 7
+    _type: request
+
+  - _id: req_impact_graphql_create
+    parentId: fld_impact
+    modified: 0
+    created: 0
+    url: "{{ _.impact_url }}/graphql"
+    name: "GraphQL: Create Impact"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "query": "mutation { createImpact(position: { flightId: \"LH789\", latitude: 52.52, longitude: 13.405, altitude: 11000 }) { id flightId severity impactScore } }"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    authentication: {}
+    metaSortKey: 8
+    _type: request
+
+  # ==================== FLIGHT SERVICE (Bastien) ====================
+  - _id: fld_flight
+    parentId: wrk_all_services
+    modified: 0
+    created: 0
+    name: "✈️ Flight Service (Bastien)"
+    description: "Récupère les vols via OpenSky API"
+    _type: request_group
+
+  - _id: req_flight_global
+    parentId: fld_flight
+    modified: 0
+    created: 0
+    url: "{{ _.flight_url }}/flights"
+    name: "GET Flights (Global)"
+    description: "Tous les vols dans le monde"
+    method: GET
+    body: {}
+    headers: []
+    authentication: {}
+    metaSortKey: 0
+    _type: request
+
+  - _id: req_flight_bbox
+    parentId: fld_flight
+    modified: 0
+    created: 0
+    url: "{{ _.flight_url }}/flights"
+    name: "GET Flights (Bbox France)"
+    description: "Vols dans une bounding box"
+    method: GET
+    body: {}
+    parameters:
+      - name: lamin
+        value: "41.0"
+      - name: lomin
+        value: "-5.0"
+      - name: lamax
+        value: "51.0"
+      - name: lomax
+        value: "10.0"
+    headers: []
+    authentication: {}
+    metaSortKey: 1
+    _type: request
+
+  # ==================== WEATHER SERVICE (Daner) ====================
+  - _id: fld_weather
+    parentId: wrk_all_services
+    modified: 0
+    created: 0
+    name: "🌦️ Weather Service (Daner) - NOT READY"
+    description: "Évalue les risques météo - PHP/Slim"
+    _type: request_group
+
+  - _id: req_weather_risk
+    parentId: fld_weather
+    modified: 0
+    created: 0
+    url: "{{ _.weather_url }}/api/weather/risk"
+    name: "GET Weather Risk"
+    description: "Risque météo pour une position (NOT IMPLEMENTED YET)"
+    method: GET
+    body: {}
+    parameters:
+      - name: lat
+        value: "48.8566"
+      - name: lon
+        value: "2.3522"
+      - name: altitude
+        value: "10000"
+    headers: []
+    authentication: {}
+    metaSortKey: 0
+    _type: request
+
+  # ==================== SATELLITE SERVICE (Thomas) ====================
+  - _id: fld_satellite
+    parentId: wrk_all_services
+    modified: 0
+    created: 0
+    name: "🛰️ Satellite Service (Thomas)"
+    description: "Imagerie satellite - Kotlin/Spring Boot"
+    _type: request_group
+
+  - _id: req_satellite_put
+    parentId: fld_satellite
+    modified: 0
+    created: 0
+    url: "{{ _.satellite_url }}/satellites/tiles/impacts/IMPACT_ID_HERE"
+    name: "PUT Capture Satellite Tile"
+    description: "Capture une tuile satellite pour un impact"
+    method: PUT
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "lat": 48.8566,
+          "lon": 2.3522
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    authentication: {}
+    metaSortKey: 0
+    _type: request
+
+  - _id: req_satellite_get
+    parentId: fld_satellite
+    modified: 0
+    created: 0
+    url: "{{ _.satellite_url }}/satellites/tiles/impacts/IMPACT_ID_HERE"
+    name: "GET Satellite Tile (NOT IMPLEMENTED)"
+    description: "Récupère une tuile satellite - TODO() côté Thomas"
+    method: GET
+    body: {}
+    headers: []
+    authentication: {}
+    metaSortKey: 1
+    _type: request
