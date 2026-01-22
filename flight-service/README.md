@@ -121,7 +121,7 @@ Limites (OpenSky) :
   - **1 à 4 crédits** selon la taille de la zone (par “square degrees”)
   - **global = 4 crédits** 
 
-➡️ Conclusion : en global, tu tiens ~`400 / 4 = 100` requêtes / jour. Donc **cache indispensable**.
+➡️ Conclusion : en global, c'est ~`400 / 4 = 100` requêtes / jour. Donc **cache indispensable**.
 
 ### 2) Mode authentifié (OpenSky user / API client)
 

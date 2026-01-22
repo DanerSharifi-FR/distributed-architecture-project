@@ -1,0 +1,401 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2024-01-15T12:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v2023.5.8",
+  "resources": [
+    {
+      "_id": "wrk_impact_service",
+      "parentId": null,
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "name": "Impact Service API",
+      "description": "API pour le service d'impact météo aviation",
+      "scope": "collection",
+      "_type": "workspace"
+    },
+    {
+      "_id": "fld_rest",
+      "parentId": "wrk_impact_service",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "name": "REST API",
+      "_type": "request_group"
+    },
+    {
+      "_id": "fld_graphql",
+      "parentId": "wrk_impact_service",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "name": "GraphQL",
+      "_type": "request_group"
+    },
+    {
+      "_id": "env_base",
+      "parentId": "wrk_impact_service",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:8000"
+      },
+      "dataPropertyOrder": {
+        "&": ["base_url"]
+      },
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 1705320000000,
+      "_type": "environment"
+    },
+    {
+      "_id": "req_health",
+      "parentId": "fld_rest",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "url": "{{ _.base_url }}/api/health",
+      "name": "Health Check",
+      "description": "Vérifier l'état du service",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 1,
+      "_type": "request"
+    },
+    {
+      "_id": "req_root",
+      "parentId": "fld_rest",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "url": "{{ _.base_url }}/",
+      "name": "Root Info",
+      "description": "Infos sur le service",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 0,
+      "_type": "request"
+    },
+    {
+      "_id": "req_create_impact",
+      "parentId": "fld_rest",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "url": "{{ _.base_url }}/api/impacts",
+      "name": "Create Impact",
+      "description": "Calculer un impact pour une position de vol",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"flight_id\": \"AF1234\",\n  \"callsign\": \"AIR FRANCE 1234\",\n  \"latitude\": 48.8566,\n  \"longitude\": 2.3522,\n  \"altitude\": 10000,\n  \"speed\": 250,\n  \"heading\": 90\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 2,
+      "_type": "request"
+    },
+    {
+      "_id": "req_list_impacts",
+      "parentId": "fld_rest",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "url": "{{ _.base_url }}/api/impacts",
+      "name": "List Impacts",
+      "description": "Lister tous les impacts",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "limit",
+          "value": "50",
+          "disabled": false
+        },
+        {
+          "name": "offset",
+          "value": "0",
+          "disabled": false
+        },
+        {
+          "name": "severity",
+          "value": "",
+          "disabled": true
+        },
+        {
+          "name": "flight_id",
+          "value": "",
+          "disabled": true
+        },
+        {
+          "name": "min_score",
+          "value": "",
+          "disabled": true
+        },
+        {
+          "name": "max_score",
+          "value": "",
+          "disabled": true
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 3,
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_impact",
+      "parentId": "fld_rest",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "url": "{{ _.base_url }}/api/impacts/IMPACT_ID_HERE",
+      "name": "Get Impact by ID",
+      "description": "Récupérer un impact spécifique",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 4,
+      "_type": "request"
+    },
+    {
+      "_id": "req_delete_impact",
+      "parentId": "fld_rest",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "url": "{{ _.base_url }}/api/impacts/IMPACT_ID_HERE",
+      "name": "Delete Impact",
+      "description": "Supprimer un impact",
+      "method": "DELETE",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 5,
+      "_type": "request"
+    },
+    {
+      "_id": "req_impacts_by_flight",
+      "parentId": "fld_rest",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "url": "{{ _.base_url }}/api/impacts/flight/AF1234",
+      "name": "Impacts by Flight",
+      "description": "Récupérer les impacts d'un vol",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "limit",
+          "value": "20",
+          "disabled": false
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 6,
+      "_type": "request"
+    },
+    {
+      "_id": "req_impacts_by_severity",
+      "parentId": "fld_rest",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "url": "{{ _.base_url }}/api/impacts/severity/critical",
+      "name": "Impacts by Severity",
+      "description": "Récupérer les impacts par sévérité (low, medium, high, critical)",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "limit",
+          "value": "50",
+          "disabled": false
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 7,
+      "_type": "request"
+    },
+    {
+      "_id": "req_stats",
+      "parentId": "fld_rest",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "url": "{{ _.base_url }}/api/stats",
+      "name": "Stats",
+      "description": "Statistiques globales",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 8,
+      "_type": "request"
+    },
+    {
+      "_id": "req_graphql_calculate",
+      "parentId": "fld_graphql",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "url": "{{ _.base_url }}/graphql",
+      "name": "Calculate Impact (Mutation)",
+      "description": "Calculer un impact via GraphQL",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/graphql",
+        "text": "mutation CalculateImpact {\n  calculateImpact(position: {\n    flightId: \"LH789\"\n    callsign: \"LUFTHANSA 789\"\n    latitude: 52.52\n    longitude: 13.405\n    altitude: 11000\n    speed: 280\n    heading: 45\n  }) {\n    id\n    flightId\n    severity\n    impactScore\n    description\n    recommendations\n    weatherRisk {\n      overallScore\n      hazards {\n        type\n        severity\n        description\n      }\n    }\n    satelliteContext {\n      cloudCoverage\n      tileUrl\n    }\n    createdAt\n  }\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 1,
+      "_type": "request"
+    },
+    {
+      "_id": "req_graphql_get_impact",
+      "parentId": "fld_graphql",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "url": "{{ _.base_url }}/graphql",
+      "name": "Get Impact (Query)",
+      "description": "Récupérer un impact via GraphQL",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/graphql",
+        "text": "query GetImpact {\n  impact(id: \"IMPACT_ID_HERE\") {\n    id\n    flightId\n    callsign\n    severity\n    impactScore\n    description\n    recommendations\n    position {\n      latitude\n      longitude\n      altitude\n      timestamp\n    }\n    weatherRisk {\n      overallScore\n      hazards {\n        type\n        severity\n      }\n    }\n    createdAt\n  }\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 2,
+      "_type": "request"
+    },
+    {
+      "_id": "req_graphql_list_impacts",
+      "parentId": "fld_graphql",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "url": "{{ _.base_url }}/graphql",
+      "name": "List Impacts (Query)",
+      "description": "Lister les impacts via GraphQL",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/graphql",
+        "text": "query ListImpacts {\n  impacts(limit: 20, offset: 0) {\n    id\n    flightId\n    callsign\n    severity\n    impactScore\n    description\n    createdAt\n  }\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 3,
+      "_type": "request"
+    },
+    {
+      "_id": "req_graphql_critical",
+      "parentId": "fld_graphql",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "url": "{{ _.base_url }}/graphql",
+      "name": "Critical Impacts (Query)",
+      "description": "Récupérer les impacts critiques",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/graphql",
+        "text": "query CriticalImpacts {\n  criticalImpacts(limit: 10) {\n    id\n    flightId\n    callsign\n    severity\n    impactScore\n    description\n    recommendations\n    createdAt\n  }\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 4,
+      "_type": "request"
+    },
+    {
+      "_id": "req_graphql_stats",
+      "parentId": "fld_graphql",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "url": "{{ _.base_url }}/graphql",
+      "name": "Impact Stats (Query)",
+      "description": "Statistiques via GraphQL",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/graphql",
+        "text": "query ImpactStats {\n  impactStats {\n    totalCount\n    criticalCount\n    highCount\n    mediumCount\n    lowCount\n    avgImpactScore\n  }\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 5,
+      "_type": "request"
+    },
+    {
+      "_id": "req_graphql_by_flight",
+      "parentId": "fld_graphql",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "url": "{{ _.base_url }}/graphql",
+      "name": "Impacts by Flight (Query)",
+      "description": "Impacts d'un vol via GraphQL",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/graphql",
+        "text": "query ImpactsByFlight {\n  impactsByFlight(flightId: \"AF1234\", limit: 10) {\n    id\n    flightId\n    severity\n    impactScore\n    description\n    createdAt\n  }\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 6,
+      "_type": "request"
+    },
+    {
+      "_id": "req_graphql_filtered",
+      "parentId": "fld_graphql",
+      "modified": 1705320000000,
+      "created": 1705320000000,
+      "url": "{{ _.base_url }}/graphql",
+      "name": "Filtered Impacts (Query)",
+      "description": "Impacts avec filtres via GraphQL",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/graphql",
+        "text": "query FilteredImpacts {\n  impacts(\n    filter: {\n      severity: \"high\"\n      minScore: 50\n    }\n    limit: 20\n  ) {\n    id\n    flightId\n    severity\n    impactScore\n    description\n    createdAt\n  }\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 7,
+      "_type": "request"
+    }
+  ]
+}
