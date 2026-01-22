@@ -20,7 +20,7 @@ class OpenWeatherClient
     }
 
     /**
-     * @return array{payload: array, upstream_ms: int}
+     * @return array{ok: bool, payload?: array, status?: int, error_message?: string, body_snippet?: string, upstream_ms: int}
      */
     public function fetchOneCall(
         float $lat,
@@ -61,17 +61,22 @@ class OpenWeatherClient
                 $content = $response->getContent(false);
                 $upstreamMs = (int) round((microtime(true) - $start) * 1000);
 
-                if ($status >= 500) {
-                    if ($attempt < $attempts) {
+                if ($status < 200 || $status >= 300) {
+                    if ($status >= 500 && $attempt < $attempts) {
                         $this->sleepBackoff($attempt);
                         continue;
                     }
 
-                    throw new OpenWeatherException('Upstream server error');
-                }
+                    $snippet = $this->sanitize($this->snippet($content));
+                    $errorMessage = $this->sanitize($this->extractErrorMessage($content, $status));
 
-                if ($status >= 400) {
-                    throw new OpenWeatherException('Upstream request rejected');
+                    return [
+                        'ok' => false,
+                        'status' => $status,
+                        'error_message' => $errorMessage,
+                        'body_snippet' => $snippet,
+                        'upstream_ms' => $upstreamMs,
+                    ];
                 }
 
                 $payload = json_decode($content, true);
@@ -80,6 +85,7 @@ class OpenWeatherClient
                 }
 
                 return [
+                    'ok' => true,
                     'payload' => $payload,
                     'upstream_ms' => $upstreamMs,
                 ];
@@ -100,5 +106,30 @@ class OpenWeatherClient
     {
         $delayUs = (int) (100000 * (2 ** $attempt));
         usleep($delayUs);
+    }
+
+    private function snippet(string $content): string
+    {
+        $content = trim($content);
+        if ($content === '') {
+            return '';
+        }
+
+        return substr($content, 0, 500);
+    }
+
+    private function extractErrorMessage(string $content, int $status): string
+    {
+        $decoded = json_decode($content, true);
+        if (is_array($decoded) && isset($decoded['message']) && is_string($decoded['message'])) {
+            return $decoded['message'];
+        }
+
+        return sprintf('Upstream returned HTTP %d', $status);
+    }
+
+    private function sanitize(string $value): string
+    {
+        return (string) preg_replace('/(appid=)[^&\\s]+/i', '$1***', $value);
     }
 }

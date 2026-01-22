@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Config;
 use App\Service\OpenWeatherClient;
 use App\Service\OpenWeatherException;
 use App\Service\WeatherCache;
@@ -70,6 +71,10 @@ final class WeatherController
 
         try {
             $upstream = $this->client->fetchOneCall($lat, $lon, $units, $lang, $exclude);
+            if (($upstream['ok'] ?? false) !== true) {
+                return $this->handleUpstreamFailure($request, $response, $lat, $lon, $cacheEntry, $includeRaw, $upstream);
+            }
+
             $normalizedPayload = $this->normalizer->normalize($upstream['payload'], true);
             $this->cache->set($cacheKey, $normalizedPayload);
             $payload = $this->normalizer->applyRawPreference($normalizedPayload, $includeRaw);
@@ -114,6 +119,73 @@ final class WeatherController
                 'request_id' => $requestId,
             ]);
         }
+    }
+
+    private function handleUpstreamFailure(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        float $lat,
+        float $lon,
+        ?array $cacheEntry,
+        bool $includeRaw,
+        array $upstream
+    ): ResponseInterface {
+        $requestId = (string) $request->getAttribute('request_id');
+        $status = (int) ($upstream['status'] ?? 0);
+
+        if ($cacheEntry !== null && $this->cache->isWithinMaxStale((int) $cacheEntry['cached_at'])) {
+            $payload = $this->normalizer->applyRawPreference($cacheEntry['payload'], $includeRaw);
+
+            return $this->respondSuccess($response, $requestId, $lat, $lon, $payload, [
+                'cache_hit' => true,
+                'cache_age_s' => $this->cache->ageSeconds((int) $cacheEntry['cached_at']),
+                'upstream_ms' => null,
+                'stale' => true,
+            ]);
+        }
+
+        $debug = null;
+        if ($this->shouldIncludeDebug()) {
+            $debug = [
+                'status' => $status,
+                'body' => (string) ($upstream['body_snippet'] ?? ''),
+                'upstream_ms' => $upstream['upstream_ms'] ?? null,
+            ];
+        }
+
+        if ($status === 401 || $status === 403) {
+            return $this->json($response, 502, array_filter([
+                'error_code' => 'UPSTREAM_AUTH_ERROR',
+                'message' => 'OpenWeather One Call API access denied (check subscription / product activation)',
+                'request_id' => $requestId,
+                'debug' => $debug,
+            ]));
+        }
+
+        if ($status === 429) {
+            return $this->json($response, 502, array_filter([
+                'error_code' => 'UPSTREAM_RATE_LIMIT',
+                'message' => 'OpenWeather One Call API rate limit exceeded',
+                'request_id' => $requestId,
+                'debug' => $debug,
+            ]));
+        }
+
+        return $this->json($response, 502, array_filter([
+            'error_code' => 'UPSTREAM_ERROR',
+            'message' => 'Upstream service unavailable',
+            'request_id' => $requestId,
+            'debug' => $debug,
+        ]));
+    }
+
+    private function shouldIncludeDebug(): bool
+    {
+        if (Config::envBool('APP_DEBUG', false)) {
+            return true;
+        }
+
+        return Config::envString('APP_ENV', '') === 'dev';
     }
 
     private function respondSuccess(

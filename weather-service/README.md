@@ -62,6 +62,7 @@ Logs are emitted in JSON-ish format to stdout. Common fields:
 ## Troubleshooting
 
 - Redis down: `/readyz` returns `503` with an error message.
+- One Call 3.0 access: `401/403` from `/v1/onecall` means the OpenWeather One Call subscription/product is not enabled for the API key.
 - Common Docker issues:
   - Port `8080` already in use: stop the process using it or remap the port.
   - Build failures: ensure Docker has access to the project directory and retry `docker compose up --build`.
