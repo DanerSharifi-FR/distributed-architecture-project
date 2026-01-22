@@ -1,0 +1,63 @@
+type: collection.insomnia.rest/5.0
+name: satellite
+meta:
+  id: wrk_74ba1209617a4af0ac328d97a9f25163
+  created: 1769103342078
+  modified: 1769103342078
+  description: ""
+collection:
+  - url: localhost:8080/satellites/tiles/impacts/697236040c25423444b6bc74
+    name: Get satellite tile
+    meta:
+      id: req_60f88e1fd7944bf9bdd53caf8649c514
+      created: 1769103348158
+      modified: 1769103463076
+      isPrivate: false
+      description: ""
+      sortKey: -1769103348158
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.6.1
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: localhost:8080/satellites/tiles/impacts/697236040c25423444b6bc74
+    name: Put satellite tile
+    meta:
+      id: req_21cd83a6f61f46f89710e046d5b74af9
+      created: 1769103364994
+      modified: 1769103469002
+      isPrivate: false
+      description: ""
+      sortKey: -1769103364994
+    method: PUT
+    headers:
+      - name: User-Agent
+        value: insomnia/11.6.1
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_22f0757e92d23ff6789482c1d9f26f71efd11ed8
+    created: 1769103342100
+    modified: 1769103342100
+environments:
+  name: Base Environment
+  meta:
+    id: env_22f0757e92d23ff6789482c1d9f26f71efd11ed8
+    created: 1769103342089
+    modified: 1769103342089
+    isPrivate: false
