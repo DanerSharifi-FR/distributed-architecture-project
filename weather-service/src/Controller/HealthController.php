@@ -22,6 +22,13 @@ final class HealthController
 
     public function readyz(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
+        if ($this->isProdMissingInternalToken()) {
+            return $this->json($response, 503, [
+                'status' => 'error',
+                'message' => 'INTERNAL_TOKEN not set for prod',
+            ]);
+        }
+
         $redisUrl = Config::envString('REDIS_URL');
         if ($redisUrl === null || $redisUrl === '') {
             return $this->json($response, 503, [
@@ -92,6 +99,17 @@ final class HealthController
         }
 
         return $this->json($response, 200, ['status' => 'ok']);
+    }
+
+    private function isProdMissingInternalToken(): bool
+    {
+        if (Config::envString('APP_ENV', '') !== 'prod') {
+            return false;
+        }
+
+        $token = Config::envString('INTERNAL_TOKEN', '') ?? '';
+
+        return $token === '';
     }
 
     private function json(ResponseInterface $response, int $status, array $payload): ResponseInterface

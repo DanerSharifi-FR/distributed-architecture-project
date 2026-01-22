@@ -44,10 +44,12 @@ class OpenWeatherClient
             $start = microtime(true);
 
             try {
-                $response = $this->client->request('GET', $url, [
+                $options = [
                     'timeout' => $timeoutSeconds,
-                    'connect_timeout' => $connectTimeoutSeconds,
-                ]);
+                    'max_duration' => max($timeoutSeconds, $connectTimeoutSeconds),
+                ];
+
+                $response = $this->client->request('GET', $url, $options);
 
                 $status = $response->getStatusCode();
                 $content = $response->getContent(false);

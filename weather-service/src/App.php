@@ -7,8 +7,10 @@ namespace App;
 use App\Config;
 use App\Controller\HealthController;
 use App\Controller\WeatherController;
+use App\Error\JsonErrorHandler;
 use App\Middleware\InternalAuthMiddleware;
 use App\Middleware\RequestIdMiddleware;
+use App\Middleware\RateLimitMiddleware;
 use Psr\Container\ContainerInterface;
 use Slim\Factory\AppFactory;
 
@@ -23,7 +25,8 @@ final class App
         $app->get('/readyz', [HealthController::class, 'readyz']);
 
         $app->group('/v1', function ($group): void {
-            $group->get('/onecall', [WeatherController::class, 'onecall']);
+            $route = $group->get('/onecall', [WeatherController::class, 'onecall']);
+            $route->add(RateLimitMiddleware::class);
         })->add(InternalAuthMiddleware::class);
 
         if (Config::envBool('APP_DEBUG', false) || Config::envString('APP_ENV', '') === 'dev') {
@@ -31,7 +34,8 @@ final class App
         }
 
         $app->addRoutingMiddleware();
-        $app->addErrorMiddleware(true, false, false);
+        $errorMiddleware = $app->addErrorMiddleware(true, false, false);
+        $errorMiddleware->setDefaultErrorHandler(JsonErrorHandler::class);
         $app->add(RequestIdMiddleware::class);
 
         return $app;

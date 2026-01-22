@@ -59,6 +59,12 @@ Logs are emitted in JSON-ish format to stdout. Common fields:
 - Responses are cached by bucketed lat/lon, units, lang, and exclude values.
 - If the upstream API fails, cached responses within `CACHE_MAX_STALE_SECONDS` are returned with `meta.stale=true`.
 
+## Production notes
+
+- `APP_ENV=prod` requires a non-empty `INTERNAL_TOKEN`; readiness will report `503` if missing.
+- Rate limiting uses Redis: `RATE_LIMIT_GLOBAL_PER_MIN` and `RATE_LIMIT_CALLER_PER_MIN`.
+- All errors are returned as JSON. In dev, responses may include a `debug` object; in prod, debug details are omitted.
+
 ## Troubleshooting
 
 - Redis down: `/readyz` returns `503` with an error message.

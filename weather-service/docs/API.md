@@ -85,7 +85,19 @@ Errors:
 
 - `400 VALIDATION_ERROR`
 - `401 UNAUTHORIZED`
+- `429 RATE_LIMITED`
 - `502 UPSTREAM_AUTH_ERROR` (OpenWeather One Call subscription/product not enabled or access denied)
 - `502 UPSTREAM_RATE_LIMIT`
 - `502 UPSTREAM_ERROR`
 - `500 INTERNAL_ERROR`
+
+Example 429:
+
+```json
+{
+  "error_code": "RATE_LIMITED",
+  "message": "Too many requests",
+  "request_id": "uuid",
+  "retry_after_s": 12
+}
+```

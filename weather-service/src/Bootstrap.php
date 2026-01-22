@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App;
 
 use App\Service\OpenWeatherClient;
+use App\Service\RateLimiter;
+use App\Service\RateLimiterStore;
+use App\Service\RedisRateLimiterStore;
 use App\Service\WeatherCache;
 use App\Service\WeatherNormalizer;
 use DI\ContainerBuilder;
@@ -84,6 +87,9 @@ final class Bootstrap
 
                 return $redis;
             },
+            RateLimiterStore::class => function (\Redis $redis): RateLimiterStore {
+                return new RedisRateLimiterStore($redis);
+            },
             WeatherCache::class => function (\Redis $redis): WeatherCache {
                 $ttl = Config::envInt('CACHE_TTL_SECONDS', 600) ?? 600;
                 $maxStale = Config::envInt('CACHE_MAX_STALE_SECONDS', 1800) ?? 1800;
@@ -108,10 +114,29 @@ final class Bootstrap
                     $retries
                 );
             },
+            RateLimiter::class => function (RateLimiterStore $store): RateLimiter {
+                $global = Config::envInt('RATE_LIMIT_GLOBAL_PER_MIN', 300) ?? 300;
+                $caller = Config::envInt('RATE_LIMIT_CALLER_PER_MIN', 60) ?? 60;
+
+                return new RateLimiter($store, $global, $caller);
+            },
         ]);
 
         $container = $containerBuilder->build();
+        self::validateProdConfig($container->get(LoggerInterface::class));
 
         return App::create($container);
+    }
+
+    private static function validateProdConfig(LoggerInterface $logger): void
+    {
+        if (Config::envString('APP_ENV', '') !== 'prod') {
+            return;
+        }
+
+        $token = Config::envString('INTERNAL_TOKEN', '') ?? '';
+        if ($token === '') {
+            $logger->error('INTERNAL_TOKEN must be set when APP_ENV=prod');
+        }
     }
 }

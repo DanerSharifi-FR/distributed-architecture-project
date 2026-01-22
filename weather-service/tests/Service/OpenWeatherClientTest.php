@@ -33,4 +33,24 @@ final class OpenWeatherClientTest extends TestCase
         self::assertSame('1.44', $query['lon'] ?? null);
         self::assertSame('test-key', $query['appid'] ?? null);
     }
+
+    public function testBuildOneCallUrlIncludesExcludeWhenProvided(): void
+    {
+        $client = $this->createMock(HttpClientInterface::class);
+        $openWeather = new OpenWeatherClient(
+            $client,
+            'https://api.openweathermap.org',
+            'test-key',
+            1000,
+            3000,
+            0
+        );
+
+        $url = $openWeather->buildOneCallUrl(43.6, 1.44, 'metric', 'en', 'minutely,alerts');
+        $parts = parse_url($url);
+        $query = [];
+        parse_str($parts['query'] ?? '', $query);
+
+        self::assertSame('minutely,alerts', $query['exclude'] ?? null);
+    }
 }

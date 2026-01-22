@@ -23,3 +23,13 @@
 - Weather responses are cached by bucketed coordinates, units, lang, and exclude.
 - Fresh cache TTL is controlled by `CACHE_TTL_SECONDS`.
 - Stale cache responses are served on upstream failure while `cache_age_s <= CACHE_MAX_STALE_SECONDS`.
+
+## Rate limiting
+
+- `/v1/onecall` is rate limited via Redis.
+- `RATE_LIMIT_GLOBAL_PER_MIN` controls the global ceiling.
+- `RATE_LIMIT_CALLER_PER_MIN` controls per-caller limits (X-Caller-Id or client IP).
+
+## Readiness in prod
+
+- When `APP_ENV=prod`, `INTERNAL_TOKEN` must be set or `/readyz` returns `503`.

@@ -281,6 +281,7 @@ final class WeatherController
                 'status' => (int) ($upstream['status'] ?? 200),
                 'upstream_url_sanitized' => $upstreamUrlSanitized,
                 'body_snippet' => (string) ($upstream['body_snippet'] ?? ''),
+                'error' => (string) ($upstream['error_message'] ?? ''),
             ]);
         } catch (OpenWeatherException $exception) {
             return $this->json($response, 200, [
@@ -288,6 +289,7 @@ final class WeatherController
                 'status' => null,
                 'upstream_url_sanitized' => $upstreamUrlSanitized,
                 'body_snippet' => '',
+                'error' => sprintf('%s: %s', $exception::class, $exception->getMessage()),
             ]);
         }
     }

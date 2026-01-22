@@ -25,6 +25,9 @@
             "App\\": "src/"
         }
     },
+    "scripts": {
+        "test": "scripts/run-tests.sh"
+    },
     "config": {
         "platform": {
             "php": "8.3.0"
