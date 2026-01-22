@@ -20,7 +20,7 @@ class OpenWeatherClient
     }
 
     /**
-     * @return array{ok: bool, payload?: array, status?: int, error_message?: string, body_snippet?: string, upstream_ms: int}
+     * @return array{ok: bool, payload?: array, status?: int, error_message?: string, body_snippet?: string, upstream_url_sanitized?: string, upstream_ms: int}
      */
     public function fetchOneCall(
         float $lat,
@@ -33,15 +33,8 @@ class OpenWeatherClient
             throw new \RuntimeException('OpenWeather API key is missing');
         }
 
-        $url = rtrim($this->baseUrl, '/') . '/data/3.0/onecall';
-        $query = [
-            'lat' => $lat,
-            'lon' => $lon,
-            'units' => $units,
-            'lang' => $lang,
-            'exclude' => $exclude,
-            'appid' => $this->apiKey,
-        ];
+        $url = $this->buildOneCallUrl($lat, $lon, $units, $lang, $exclude);
+        $sanitizedUrl = $this->sanitize($url);
 
         $timeoutSeconds = max(0.0, $this->timeoutMs / 1000);
         $connectTimeoutSeconds = max(0.0, $this->connectTimeoutMs / 1000);
@@ -52,7 +45,6 @@ class OpenWeatherClient
 
             try {
                 $response = $this->client->request('GET', $url, [
-                    'query' => $query,
                     'timeout' => $timeoutSeconds,
                     'connect_timeout' => $connectTimeoutSeconds,
                 ]);
@@ -75,6 +67,7 @@ class OpenWeatherClient
                         'status' => $status,
                         'error_message' => $errorMessage,
                         'body_snippet' => $snippet,
+                        'upstream_url_sanitized' => $sanitizedUrl,
                         'upstream_ms' => $upstreamMs,
                     ];
                 }
@@ -87,6 +80,7 @@ class OpenWeatherClient
                 return [
                     'ok' => true,
                     'payload' => $payload,
+                    'upstream_url_sanitized' => $sanitizedUrl,
                     'upstream_ms' => $upstreamMs,
                 ];
             } catch (TransportExceptionInterface $exception) {
@@ -95,7 +89,8 @@ class OpenWeatherClient
                     continue;
                 }
 
-                throw new OpenWeatherException('Upstream transport error', 0, $exception);
+                $safeMessage = $this->sanitize($exception->getMessage());
+                throw new OpenWeatherException('Upstream transport error: ' . $safeMessage, 0, $exception);
             }
         }
 
@@ -106,6 +101,40 @@ class OpenWeatherClient
     {
         $delayUs = (int) (100000 * (2 ** $attempt));
         usleep($delayUs);
+    }
+
+    public function buildOneCallUrl(
+        float $lat,
+        float $lon,
+        string $units,
+        string $lang,
+        string $exclude
+    ): string {
+        $query = [
+            'lat' => $lat,
+            'lon' => $lon,
+            'units' => $units,
+            'lang' => $lang,
+            'appid' => $this->apiKey,
+        ];
+
+        if ($exclude !== '') {
+            $query['exclude'] = $exclude;
+        }
+
+        $base = rtrim($this->baseUrl, '/');
+
+        return $base . '/data/3.0/onecall?' . http_build_query($query);
+    }
+
+    public function buildOneCallSanitizedUrl(
+        float $lat,
+        float $lon,
+        string $units,
+        string $lang,
+        string $exclude
+    ): string {
+        return $this->sanitize($this->buildOneCallUrl($lat, $lon, $units, $lang, $exclude));
     }
 
     private function snippet(string $content): string

@@ -6,20 +6,34 @@ namespace App;
 
 final class Config
 {
-    public static function envString(string $key, ?string $default = null): ?string
+    private static function readEnv(string $key): ?string
     {
         $value = getenv($key);
-        if ($value === false) {
+        if ($value !== false) {
+            return (string) $value;
+        }
+
+        if (isset($_ENV[$key])) {
+            return (string) $_ENV[$key];
+        }
+
+        return null;
+    }
+
+    public static function envString(string $key, ?string $default = null): ?string
+    {
+        $value = self::readEnv($key);
+        if ($value === null) {
             return $default;
         }
 
-        return (string) $value;
+        return $value;
     }
 
     public static function envInt(string $key, ?int $default = null): ?int
     {
-        $value = getenv($key);
-        if ($value === false || $value === '') {
+        $value = self::readEnv($key);
+        if ($value === null || $value === '') {
             return $default;
         }
 
@@ -32,8 +46,8 @@ final class Config
 
     public static function envFloat(string $key, ?float $default = null): ?float
     {
-        $value = getenv($key);
-        if ($value === false || $value === '') {
+        $value = self::readEnv($key);
+        if ($value === null || $value === '') {
             return $default;
         }
 
@@ -46,8 +60,8 @@ final class Config
 
     public static function envBool(string $key, bool $default = false): bool
     {
-        $value = getenv($key);
-        if ($value === false || $value === '') {
+        $value = self::readEnv($key);
+        if ($value === null || $value === '') {
             return $default;
         }
 

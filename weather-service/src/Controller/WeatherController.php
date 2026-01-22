@@ -47,6 +47,7 @@ final class WeatherController
         $lang = $normalized['lang'];
         $exclude = $normalized['exclude'];
         $includeRaw = $normalized['raw'];
+        $upstreamUrlSanitized = $this->client->buildOneCallSanitizedUrl($lat, $lon, $units, $lang, $exclude);
 
         $cacheKey = WeatherCache::buildKey(
             $lat,
@@ -70,9 +71,23 @@ final class WeatherController
         }
 
         try {
+            $this->logger->debug('OpenWeather upstream request', [
+                'request_id' => $requestId,
+                'url' => $upstreamUrlSanitized,
+            ]);
+
             $upstream = $this->client->fetchOneCall($lat, $lon, $units, $lang, $exclude);
             if (($upstream['ok'] ?? false) !== true) {
-                return $this->handleUpstreamFailure($request, $response, $lat, $lon, $cacheEntry, $includeRaw, $upstream);
+                return $this->handleUpstreamFailure(
+                    $request,
+                    $response,
+                    $lat,
+                    $lon,
+                    $cacheEntry,
+                    $includeRaw,
+                    $upstream,
+                    $upstreamUrlSanitized
+                );
             }
 
             $normalizedPayload = $this->normalizer->normalize($upstream['payload'], true);
@@ -100,13 +115,26 @@ final class WeatherController
             $this->logger->warning('OpenWeather upstream error', [
                 'request_id' => $requestId,
                 'error' => $exception->getMessage(),
+                'url' => $upstreamUrlSanitized,
             ]);
 
-            return $this->json($response, 502, [
+            $debug = null;
+            if ($this->shouldIncludeDebug()) {
+                $debug = [
+                    'upstream_url_sanitized' => $upstreamUrlSanitized,
+                    'status' => null,
+                    'error' => sprintf('%s: %s', $exception::class, $exception->getMessage()),
+                    'body_snippet' => null,
+                    'upstream_ms' => null,
+                ];
+            }
+
+            return $this->json($response, 502, array_filter([
                 'error_code' => 'UPSTREAM_ERROR',
                 'message' => 'Upstream service unavailable',
                 'request_id' => $requestId,
-            ]);
+                'debug' => $debug,
+            ]));
         } catch (\Throwable $exception) {
             $this->logger->error('Weather controller error', [
                 'request_id' => $requestId,
@@ -128,7 +156,8 @@ final class WeatherController
         float $lon,
         ?array $cacheEntry,
         bool $includeRaw,
-        array $upstream
+        array $upstream,
+        string $upstreamUrlSanitized
     ): ResponseInterface {
         $requestId = (string) $request->getAttribute('request_id');
         $status = (int) ($upstream['status'] ?? 0);
@@ -147,11 +176,21 @@ final class WeatherController
         $debug = null;
         if ($this->shouldIncludeDebug()) {
             $debug = [
+                'upstream_url_sanitized' => $upstreamUrlSanitized,
                 'status' => $status,
-                'body' => (string) ($upstream['body_snippet'] ?? ''),
+                'error' => (string) ($upstream['error_message'] ?? ''),
+                'body_snippet' => (string) ($upstream['body_snippet'] ?? ''),
                 'upstream_ms' => $upstream['upstream_ms'] ?? null,
             ];
         }
+
+        $this->logger->warning('OpenWeather upstream failure', [
+            'request_id' => $requestId,
+            'status' => $status,
+            'body_snippet' => (string) ($upstream['body_snippet'] ?? ''),
+            'upstream_ms' => $upstream['upstream_ms'] ?? null,
+            'url' => $upstreamUrlSanitized,
+        ]);
 
         if ($status === 401 || $status === 403) {
             return $this->json($response, 502, array_filter([
@@ -207,6 +246,50 @@ final class WeatherController
         $body = array_merge($body, $payload);
 
         return $this->json($response, 200, $body);
+    }
+
+    public function debugOnecall(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
+        [$errors, $normalized] = $this->validate($request->getQueryParams());
+        if ($errors !== []) {
+            return $this->json($response, 400, [
+                'error_code' => 'VALIDATION_ERROR',
+                'message' => 'Validation failed',
+                'details' => $errors,
+                'request_id' => (string) $request->getAttribute('request_id'),
+            ]);
+        }
+
+        $lat = $normalized['lat'];
+        $lon = $normalized['lon'];
+        $units = $normalized['units'];
+        $lang = $normalized['lang'];
+        $exclude = $normalized['exclude'];
+
+        $upstreamUrlSanitized = $this->client->buildOneCallSanitizedUrl($lat, $lon, $units, $lang, $exclude);
+
+        try {
+            $this->logger->debug('OpenWeather upstream debug request', [
+                'request_id' => (string) $request->getAttribute('request_id'),
+                'url' => $upstreamUrlSanitized,
+            ]);
+
+            $upstream = $this->client->fetchOneCall($lat, $lon, $units, $lang, $exclude);
+
+            return $this->json($response, 200, [
+                'ok' => (bool) ($upstream['ok'] ?? false),
+                'status' => (int) ($upstream['status'] ?? 200),
+                'upstream_url_sanitized' => $upstreamUrlSanitized,
+                'body_snippet' => (string) ($upstream['body_snippet'] ?? ''),
+            ]);
+        } catch (OpenWeatherException $exception) {
+            return $this->json($response, 200, [
+                'ok' => false,
+                'status' => null,
+                'upstream_url_sanitized' => $upstreamUrlSanitized,
+                'body_snippet' => '',
+            ]);
+        }
     }
 
     private function validate(array $query): array

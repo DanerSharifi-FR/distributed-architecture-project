@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App;
 
+use App\Config;
 use App\Controller\HealthController;
 use App\Controller\WeatherController;
 use App\Middleware\InternalAuthMiddleware;
@@ -24,6 +25,10 @@ final class App
         $app->group('/v1', function ($group): void {
             $group->get('/onecall', [WeatherController::class, 'onecall']);
         })->add(InternalAuthMiddleware::class);
+
+        if (Config::envBool('APP_DEBUG', false) || Config::envString('APP_ENV', '') === 'dev') {
+            $app->get('/debug/upstream/onecall', [WeatherController::class, 'debugOnecall']);
+        }
 
         $app->addRoutingMiddleware();
         $app->addErrorMiddleware(true, false, false);
