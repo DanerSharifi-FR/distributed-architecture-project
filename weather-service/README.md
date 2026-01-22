@@ -149,6 +149,15 @@ See `docs/TECHNICAL.md` for request flow, Redis usage, and configuration details
 - `/docs` (Swagger UI)
 - `/openapi.yaml` (OpenAPI 3.0 spec)
 
+## Documentation index
+
+- `docs/ARCHITECTURE.md`
+- `docs/API.md`
+- `docs/DECISIONS.md`
+- `docs/OPERATIONS.md`
+- `docs/TECHNICAL.md`
+- `docs/openapi.yaml`
+
 ## Troubleshooting
 
 - Redis down: `/readyz` returns `503` with an error message.
