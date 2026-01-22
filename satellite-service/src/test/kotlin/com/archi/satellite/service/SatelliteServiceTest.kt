@@ -14,9 +14,12 @@ import kotlinx.coroutines.test.runTest
 import org.bson.types.ObjectId
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.springframework.beans.factory.annotation.Autowired
 import kotlin.test.Test
 
-class SatelliteServiceTest: ServicesCleaner() {
+class SatelliteServiceTest @Autowired constructor(
+    tileMapper: TileMapper
+): ServicesCleaner() {
     private val fileService = mockk<FileService>()
 
     private val owmService = mockk<OwmService>()
@@ -24,8 +27,6 @@ class SatelliteServiceTest: ServicesCleaner() {
     private val satelliteTileRepository = mockk<SatelliteTileRepository>()
 
     private val impactRepository = mockk<ImpactRepository>()
-
-    private val tileMapper = TileMapper()
 
     private val satelliteService = SatelliteService(
         fileService,
@@ -61,7 +62,7 @@ class SatelliteServiceTest: ServicesCleaner() {
         layers.forEach { (layer) ->
             val foundLayer = tileDto.layers[layer]
             assertNotNull(foundLayer)
-            assertEquals(picture, foundLayer)
+            assert(foundLayer?.endsWith(picture) ?: false)
         }
 
         coVerify(exactly = layers.size) { fileService.putTileLayerPicture(impactId, any(), any()) }
@@ -79,7 +80,7 @@ class SatelliteServiceTest: ServicesCleaner() {
 
         assertEquals(tileDto.layers.size, tile.layers.size)
         tile.layers.forEach { (layer, file) ->
-            kotlin.test.assertEquals(file, tileDto.layers[layer])
+            assert(tileDto.layers[layer]?.endsWith(file) ?: false)
         }
 
         coVerify(exactly = 1) { satelliteTileRepository.findById(tile.impactId) }

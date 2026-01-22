@@ -100,7 +100,7 @@ class SatelliteControllerTest @Autowired constructor(
         assertNotNull(tileDto)
         assertEquals(tile.layers.size, tileDto.layers.size)
         tile.layers.entries.forEach { (layer, file) ->
-            assertEquals(file, tileDto.layers[layer])
+            assert(tileDto.layers[layer]?.endsWith(file) ?: false)
         }
     }
 }
