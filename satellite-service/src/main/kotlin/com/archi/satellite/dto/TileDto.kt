@@ -1,9 +1,7 @@
 package com.archi.satellite.dto
 
-import com.archi.satellite.service.OwmLayer
-
-typealias LayersDto = Map<OwmLayer, String>
+import com.archi.satellite.model.Layers
 
 class TileDto(
-    val layers: LayersDto
+    val layers: Layers
 )

@@ -1,7 +1,6 @@
 
 package com.archi.satellite.controller
 
-import com.archi.satellite.dto.CoordinatesDto
 import com.archi.satellite.dto.TileDto
 import com.archi.satellite.service.SatelliteService
 import com.archi.satellite.validator.ValidId
@@ -17,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
-// TODO brancher à BDD mongodb
-// TODO add get / put satellite picture (do not forget to change response type in GET AND PUT !!!)
 // TODO add authentication
 
 @RestController
@@ -26,14 +23,21 @@ import org.springframework.web.bind.annotation.RestController
 class SatelliteController(private val satelliteService: SatelliteService) {
     @GetMapping("/tiles/impacts/{impactId}")
     @Operation(summary = "Retrieve satellite tile of an impact")
-    @ApiResponses(ApiResponse(responseCode = "200"))
-    suspend fun getSatelliteTile(@PathVariable @ValidId impactId: String): String = TODO()
+    @ApiResponses(
+        ApiResponse(responseCode = "200"),
+        ApiResponse(responseCode = "404", description = "The satellite tile with this impactId does not exist")
+    )
+    suspend fun getSatelliteTile(
+        @PathVariable @ValidId impactId: String
+    ): TileDto = satelliteService.retrieveSatelliteTile(impactId)
 
     @PutMapping("/tiles/impacts/{impactId}")
     @Operation(summary = "Create satellite tile of an impact")
-    @ApiResponses(ApiResponse(responseCode = "200"))
+    @ApiResponses(
+        ApiResponse(responseCode = "200"),
+        ApiResponse(responseCode = "404", description = "The impact with this id does not exist")
+    )
     suspend fun putSatelliteTile(
         @PathVariable @ValidId impactId: String,
-        @RequestBody @Valid coordinatesDto: CoordinatesDto,
-    ): TileDto = satelliteService.captureSatelliteTile(impactId, coordinatesDto)
+    ): TileDto = satelliteService.captureSatelliteTile(impactId)
 }

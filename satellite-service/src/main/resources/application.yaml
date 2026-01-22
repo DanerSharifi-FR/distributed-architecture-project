@@ -2,6 +2,11 @@ spring:
   application:
     name: archi
 
+  mongodb:
+    host: localhost
+    port: 27017
+    database: archi_project
+
 satellite:
   minio:
     access-key: minioadmin
