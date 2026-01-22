@@ -140,6 +140,10 @@ INTERNAL_TOKEN=<generated>
 - `scripts/gen-token.sh`: prints a token and a sample `.env` line.
 - `scripts/setup-env.sh`: copies `.env.example` to `.env` if missing.
 
+## Technical deep-dive
+
+See `docs/TECHNICAL.md` for request flow, Redis usage, and configuration details.
+
 ## Troubleshooting
 
 - Redis down: `/readyz` returns `503` with an error message.
