@@ -21,15 +21,24 @@ curl -i http://localhost:8080/readyz
 - `GET /readyz`
   - Response (ready): `{"status":"ok"}`
   - Response (not ready): `{"status":"error","message":"..."}` with `503`
+- `GET /v1/onecall`
+  - Internal OpenWeather One Call 3.0 proxy with caching.
+  - Requires `X-Internal-Token` header when `INTERNAL_TOKEN` is set.
 
 ## Environment variables
 
 Create a local `.env` from `.env.example` and fill in values. Never commit secrets; use CI secret stores for production.
 
-- `REDIS_URL`: Redis connection string (required for readiness checks).
-- `INTERNAL_TOKEN`: Reserved for future internal auth between services.
-- `OPENWEATHER_API_KEY`: Reserved for OpenWeather API authentication.
-- `CACHE_TTL_SECONDS`: Reserved for cache TTL configuration.
+- `REDIS_URL`: Redis connection string (required for caching and readiness checks).
+- `INTERNAL_TOKEN`: Internal auth token for `/v1/*` routes (empty disables checks).
+- `OPENWEATHER_API_KEY`: OpenWeather API key.
+- `OPENWEATHER_BASE_URL`: Base URL for OpenWeather (default `https://api.openweathermap.org`).
+- `OPENWEATHER_CONNECT_TIMEOUT_MS`: Upstream connect timeout in milliseconds.
+- `OPENWEATHER_TIMEOUT_MS`: Upstream timeout in milliseconds.
+- `OPENWEATHER_RETRIES`: Upstream retry count for timeouts/5xx responses.
+- `CACHE_TTL_SECONDS`: Cache TTL for fresh responses.
+- `CACHE_MAX_STALE_SECONDS`: Maximum age for stale-if-error responses.
+- `WEATHER_CACHE_BUCKET_DEG`: Lat/lon bucket size for cache keys.
 - `RATE_LIMIT_*`: Reserved for future rate limiting settings.
 
 `.env` is loaded for local development via `vlucas/phpdotenv`. Any already-defined environment variables take precedence over `.env` values.
@@ -44,6 +53,11 @@ Create a local `.env` from `.env.example` and fill in values. Never commit secre
 Logs are emitted in JSON-ish format to stdout. Common fields:
 - `level`, `message`, `context`, `datetime`
 - `context.request_id` when available
+
+## Caching
+
+- Responses are cached by bucketed lat/lon, units, lang, and exclude values.
+- If the upstream API fails, cached responses within `CACHE_MAX_STALE_SECONDS` are returned with `meta.stale=true`.
 
 ## Troubleshooting
 

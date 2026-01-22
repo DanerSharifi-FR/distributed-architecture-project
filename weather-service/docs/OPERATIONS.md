@@ -17,3 +17,9 @@
 - If `/readyz` is failing, confirm Redis connectivity and credentials.
 - Check `REDIS_URL` is set in the container environment.
 - Inspect logs for `request_id` to trace a request end-to-end.
+
+## Caching behavior
+
+- Weather responses are cached by bucketed coordinates, units, lang, and exclude.
+- Fresh cache TTL is controlled by `CACHE_TTL_SECONDS`.
+- Stale cache responses are served on upstream failure while `cache_age_s <= CACHE_MAX_STALE_SECONDS`.
