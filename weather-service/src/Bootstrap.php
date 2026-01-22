@@ -11,6 +11,7 @@ use DI\ContainerBuilder;
 use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use Monolog\LogRecord;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -27,12 +28,17 @@ final class Bootstrap
                 $handler = new StreamHandler('php://stdout');
                 $handler->setFormatter(new JsonFormatter());
                 $logger->pushHandler($handler);
-                $logger->pushProcessor(static function (array $record): array {
-                    if (!isset($record['context']['request_id']) && isset($_SERVER['HTTP_X_REQUEST_ID'])) {
-                        $record['context']['request_id'] = $_SERVER['HTTP_X_REQUEST_ID'];
+                $logger->pushProcessor(static function (LogRecord $record): LogRecord {
+                    $requestId = $record->context['request_id'] ?? $record->extra['request_id'] ?? null;
+                    if ($requestId === null || $requestId === '') {
+                        $requestId = $_SERVER['HTTP_X_REQUEST_ID'] ?? null;
                     }
 
-                    return $record;
+                    if ($requestId === null || $requestId === '') {
+                        return $record;
+                    }
+
+                    return $record->with(extra: $record->extra + ['request_id' => $requestId]);
                 });
 
                 return $logger;

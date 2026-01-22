@@ -6,7 +6,7 @@ namespace App;
 
 use App\Controller\HealthController;
 use App\Controller\WeatherController;
-use App\Middleware/InternalAuthMiddleware;
+use App\Middleware\InternalAuthMiddleware;
 use App\Middleware\RequestIdMiddleware;
 use Psr\Container\ContainerInterface;
 use Slim\Factory\AppFactory;

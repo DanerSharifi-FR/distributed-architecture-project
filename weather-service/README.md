@@ -52,7 +52,7 @@ Create a local `.env` from `.env.example` and fill in values. Never commit secre
 
 Logs are emitted in JSON-ish format to stdout. Common fields:
 - `level`, `message`, `context`, `datetime`
-- `context.request_id` when available
+- `extra.request_id` when available
 
 ## Caching
 
