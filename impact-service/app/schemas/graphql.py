@@ -86,8 +86,11 @@ class Query:
 class Mutation:
 
     @strawberry.mutation
-    async def calculate_impact(self, position: PositionInput) -> Impact:
+    async def create_impact(self, position: PositionInput) -> Impact:
         """Calcule et sauvegarde un impact pour une position."""
+        
+        # Générer l'ObjectId en avance pour le satellite-service
+        impact_id = ObjectId()
         
         # Créer l'objet position
         pos = FlightPosition(
@@ -99,15 +102,16 @@ class Mutation:
             timestamp=datetime.utcnow()
         )
         
-        # Calculer l'impact
-        impact = await calculate_impact(pos)
+        # Calculer l'impact (avec ID pré-généré)
+        impact = await calculate_impact(pos, str(impact_id))
         
-        # Sauvegarder en MongoDB
+        # Sauvegarder en MongoDB avec l'ID pré-généré
         doc = impact.model_dump()
-        result = await get_db().impacts.insert_one(doc)
+        doc["_id"] = impact_id
+        await get_db().impacts.insert_one(doc)
         
         return Impact(
-            id=str(result.inserted_id),
+            id=str(impact_id),
             flight_id=impact.flight_id,
             callsign=impact.callsign,
             severity=impact.severity.value,
@@ -123,11 +127,16 @@ class Mutation:
         results = []
         
         for flight in flights[:limit]:
-            impact = await calculate_impact(flight)
+            # Générer l'ObjectId en avance pour le satellite-service
+            impact_id = ObjectId()
+            
+            impact = await calculate_impact(flight, str(impact_id))
             doc = impact.model_dump()
-            result = await get_db().impacts.insert_one(doc)
+            doc["_id"] = impact_id
+            await get_db().impacts.insert_one(doc)
+            
             results.append(Impact(
-                id=str(result.inserted_id),
+                id=str(impact_id),
                 flight_id=impact.flight_id,
                 callsign=impact.callsign,
                 severity=impact.severity.value,

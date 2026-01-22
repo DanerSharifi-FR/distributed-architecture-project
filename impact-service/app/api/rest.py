@@ -46,11 +46,16 @@ async def create_impact(req: PositionRequest):
     """
     Crée un nouvel impact à partir d'une position de vol.
     
-    1. Reçoit une position (lat, lon, altitude)
-    2. Calcule les risques météo
-    3. Sauvegarde en base
-    4. Retourne l'impact créé
+    1. Génère un ObjectId en avance (pour le satellite-service)
+    2. Reçoit une position (lat, lon, altitude)
+    3. Calcule les risques météo et satellite
+    4. Sauvegarde en base avec l'ID pré-généré
+    5. Retourne l'impact créé
     """
+    # Générer l'ObjectId en avance
+    # Le satellite-service en a besoin pour nous rappeler via /api/impacts/{id}
+    impact_id = ObjectId()
+    
     # Créer l'objet position
     position = FlightPosition(
         flight_id=req.flight_id,
@@ -61,16 +66,17 @@ async def create_impact(req: PositionRequest):
         timestamp=datetime.utcnow()
     )
     
-    # Calculer l'impact
-    impact = await calculate_impact(position)
+    # Calculer l'impact (on passe l'ID pré-généré)
+    impact = await calculate_impact(position, str(impact_id))
     
-    # Sauvegarder en MongoDB
+    # Sauvegarder en MongoDB avec l'ID pré-généré
     doc = impact.model_dump()
-    result = await get_db().impacts.insert_one(doc)
+    doc["_id"] = impact_id  # Utiliser l'ID qu'on a généré
+    await get_db().impacts.insert_one(doc)
     
     # Retourner l'impact créé
     return {
-        "id": str(result.inserted_id),
+        "id": str(impact_id),
         "flight_id": impact.flight_id,
         "callsign": impact.callsign,
         "severity": impact.severity.value,
@@ -110,8 +116,9 @@ async def analyze_flights(limit: int = 10):
     Analyse les vols en temps réel depuis flight-service.
     
     1. Récupère les vols actuels depuis flight-service
-    2. Calcule l'impact pour chaque vol
-    3. Sauvegarde tous les impacts
+    2. Génère un ObjectId pour chaque impact
+    3. Calcule l'impact pour chaque vol (avec l'ID pré-généré)
+    4. Sauvegarde tous les impacts
     """
     # Récupérer les vols
     flights = await get_flights()
@@ -119,11 +126,16 @@ async def analyze_flights(limit: int = 10):
     # Analyser chaque vol
     results = []
     for flight in flights[:limit]:
-        impact = await calculate_impact(flight)
+        # Générer l'ObjectId en avance pour le satellite-service
+        impact_id = ObjectId()
+        
+        impact = await calculate_impact(flight, str(impact_id))
         doc = impact.model_dump()
-        result = await get_db().impacts.insert_one(doc)
+        doc["_id"] = impact_id  # Utiliser l'ID pré-généré
+        await get_db().impacts.insert_one(doc)
+        
         results.append({
-            "id": str(result.inserted_id),
+            "id": str(impact_id),
             "flight_id": impact.flight_id,
             "severity": impact.severity.value,
             "impact_score": impact.impact_score

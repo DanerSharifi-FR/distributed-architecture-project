@@ -9,9 +9,13 @@ from app.services.weather_client import get_weather_risk
 from app.services.satellite_client import get_satellite_context
 
 
-async def calculate_impact(position: FlightPosition) -> Impact:
+async def calculate_impact(position: FlightPosition, impact_id: str) -> Impact:
     """
     Calcule l'impact météo pour une position de vol.
+    
+    Args:
+        position: Position du vol (lat, lon, altitude, etc.)
+        impact_id: ID pré-généré de l'impact (ObjectId MongoDB en string)
     
     Étapes:
     1. Récupère les risques météo (weather-service ou mock)
@@ -22,7 +26,7 @@ async def calculate_impact(position: FlightPosition) -> Impact:
     
     # 1. Récupérer les données météo et satellite
     weather = await get_weather_risk(position.latitude, position.longitude, position.altitude)
-    satellite = await get_satellite_context(position.latitude, position.longitude)
+    satellite = await get_satellite_context(impact_id, position.latitude, position.longitude)
     
     # 2. Calculer le score d'impact (0-100)
     #    - 60% basé sur le score météo global
