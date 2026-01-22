@@ -2,3 +2,7 @@
 .venv
 .idea
 .vscode
+weather-service/vendor/
+weather-service/.env
+weather-service/logs/
+weather-service/cache/
