@@ -144,6 +144,11 @@ INTERNAL_TOKEN=<generated>
 
 See `docs/TECHNICAL.md` for request flow, Redis usage, and configuration details.
 
+## API documentation
+
+- `/docs` (Swagger UI)
+- `/openapi.yaml` (OpenAPI 3.0 spec)
+
 ## Troubleshooting
 
 - Redis down: `/readyz` returns `503` with an error message.

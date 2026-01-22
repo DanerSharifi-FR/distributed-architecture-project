@@ -1,0 +1,415 @@
+openapi: 3.0.3
+info:
+  title: Weather Service API
+  version: 1.0.0
+  description: Internal OpenWeather One Call 3.0 gateway service.
+servers:
+  - url: http://localhost:8080
+components:
+  securitySchemes:
+    InternalToken:
+      type: apiKey
+      in: header
+      name: X-Internal-Token
+  schemas:
+    Meta:
+      type: object
+      properties:
+        request_id:
+          type: string
+        cache_hit:
+          type: boolean
+        cache_age_s:
+          type: integer
+          nullable: true
+        upstream_ms:
+          type: integer
+          nullable: true
+        stale:
+          type: boolean
+      required:
+        - request_id
+        - cache_hit
+        - cache_age_s
+        - upstream_ms
+        - stale
+    Location:
+      type: object
+      properties:
+        lat:
+          type: number
+        lon:
+          type: number
+      required:
+        - lat
+        - lon
+    WeatherCondition:
+      type: object
+      properties:
+        id:
+          type: integer
+          nullable: true
+        main:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        icon:
+          type: string
+          nullable: true
+    CurrentWeather:
+      type: object
+      properties:
+        dt:
+          type: integer
+          nullable: true
+        sunrise:
+          type: integer
+          nullable: true
+        sunset:
+          type: integer
+          nullable: true
+        temp:
+          type: number
+          nullable: true
+        feels_like:
+          type: number
+          nullable: true
+        pressure:
+          type: integer
+          nullable: true
+        humidity:
+          type: integer
+          nullable: true
+        dew_point:
+          type: number
+          nullable: true
+        uvi:
+          type: number
+          nullable: true
+        clouds:
+          type: integer
+          nullable: true
+        visibility:
+          type: integer
+          nullable: true
+        wind_speed:
+          type: number
+          nullable: true
+        wind_deg:
+          type: integer
+          nullable: true
+        wind_gust:
+          type: number
+          nullable: true
+        weather:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeatherCondition"
+      required:
+        - dt
+        - sunrise
+        - sunset
+        - temp
+        - feels_like
+        - pressure
+        - humidity
+        - dew_point
+        - uvi
+        - clouds
+        - visibility
+        - wind_speed
+        - wind_deg
+        - wind_gust
+        - weather
+    HourlyWeather:
+      type: object
+      properties:
+        dt:
+          type: integer
+          nullable: true
+        temp:
+          type: number
+          nullable: true
+        feels_like:
+          type: number
+          nullable: true
+        pressure:
+          type: integer
+          nullable: true
+        humidity:
+          type: integer
+          nullable: true
+        dew_point:
+          type: number
+          nullable: true
+        uvi:
+          type: number
+          nullable: true
+        clouds:
+          type: integer
+          nullable: true
+        visibility:
+          type: integer
+          nullable: true
+        wind_speed:
+          type: number
+          nullable: true
+        wind_deg:
+          type: integer
+          nullable: true
+        wind_gust:
+          type: number
+          nullable: true
+        weather:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeatherCondition"
+        pop:
+          type: number
+          nullable: true
+      required:
+        - dt
+        - temp
+        - feels_like
+        - pressure
+        - humidity
+        - dew_point
+        - uvi
+        - clouds
+        - visibility
+        - wind_speed
+        - wind_deg
+        - wind_gust
+        - weather
+        - pop
+    Alert:
+      type: object
+      properties:
+        sender_name:
+          type: string
+          nullable: true
+        event:
+          type: string
+          nullable: true
+        start:
+          type: integer
+          nullable: true
+        end:
+          type: integer
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+          nullable: true
+    WeatherResponse:
+      type: object
+      properties:
+        meta:
+          $ref: "#/components/schemas/Meta"
+        location:
+          $ref: "#/components/schemas/Location"
+        current:
+          $ref: "#/components/schemas/CurrentWeather"
+        hourly:
+          type: array
+          items:
+            $ref: "#/components/schemas/HourlyWeather"
+        alerts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Alert"
+          nullable: true
+        raw:
+          type: object
+          nullable: true
+      required:
+        - meta
+        - location
+        - current
+        - hourly
+        - alerts
+        - raw
+    ErrorResponse:
+      type: object
+      properties:
+        error_code:
+          type: string
+        message:
+          type: string
+        request_id:
+          type: string
+      required:
+        - error_code
+        - message
+        - request_id
+    ValidationErrorResponse:
+      type: object
+      properties:
+        error_code:
+          type: string
+        message:
+          type: string
+        request_id:
+          type: string
+        details:
+          type: object
+          additionalProperties:
+            type: string
+      required:
+        - error_code
+        - message
+        - request_id
+        - details
+    RateLimitResponse:
+      type: object
+      properties:
+        error_code:
+          type: string
+        message:
+          type: string
+        request_id:
+          type: string
+        retry_after_s:
+          type: integer
+      required:
+        - error_code
+        - message
+        - request_id
+        - retry_after_s
+    ReadyzError:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+      required:
+        - status
+        - message
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                required:
+                  - status
+  /readyz:
+    get:
+      summary: Readiness check
+      responses:
+        "200":
+          description: Ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                required:
+                  - status
+        "503":
+          description: Not ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadyzError"
+  /v1/onecall:
+    get:
+      summary: OpenWeather One Call gateway
+      description: Proxy to OpenWeather One Call 3.0 with caching and normalization. In dev, auth may be optional if INTERNAL_TOKEN is empty.
+      security:
+        - InternalToken: []
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema:
+            type: number
+            minimum: -90
+            maximum: 90
+        - name: lon
+          in: query
+          required: true
+          schema:
+            type: number
+            minimum: -180
+            maximum: 180
+        - name: units
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [standard, metric, imperial]
+            default: metric
+        - name: lang
+          in: query
+          required: false
+          schema:
+            type: string
+            default: en
+        - name: exclude
+          in: query
+          required: false
+          schema:
+            type: string
+            description: CSV list of current,minutely,hourly,daily,alerts
+        - name: raw
+          in: query
+          required: false
+          schema:
+            type: integer
+            enum: [0, 1]
+            default: 0
+      responses:
+        "200":
+          description: Weather response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeatherResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RateLimitResponse"
+        "502":
+          description: Upstream error (UPSTREAM_AUTH_ERROR, UPSTREAM_RATE_LIMIT, UPSTREAM_ERROR)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
