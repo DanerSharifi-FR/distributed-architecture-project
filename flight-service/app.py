@@ -171,7 +171,7 @@ def get_flights():  # handler Flask
     return jsonify(flights)  # renvoie la liste JSON
 
 
-def main():  # fonction main() comme tu veux
+def main():  # fonction main() 
     host = os.environ.get("HOST", "0.0.0.0")  # host par défaut
     port = int(os.environ.get("PORT", "5000"))  # port par défaut
     debug = os.environ.get("DEBUG", "0") == "1"  # debug si DEBUG=1
