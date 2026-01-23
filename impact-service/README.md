@@ -263,3 +263,10 @@ Variables d'environnement (dans `.env` ou docker-compose):
 ### satellite-service (Thomas) ⏳
 - Port: 8080
 - Status: **Mock** (en attente)
+
+
+MODIF
+- supprime ce que je donne envers satellite-service pour la latitude et la longitude etc mais je garde le impact_id .. le raccrocher à daner (inshallah) quand il faura fini (ex : http://localhost:8080/satellites/tiles/impacts/[impactId])
+- supprimer mon satelitecontext dans mon schema. 
+- changer le get_satellite_context dans mon satelite client par un put.
+- appel service satellite après avoir crée l'impact.

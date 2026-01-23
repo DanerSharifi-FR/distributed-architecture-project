@@ -32,20 +32,11 @@ class WeatherRisk(BaseModel):
     overall_score: float = Field(ge=0.0, le=1.0)
     hazards: list[WeatherHazard] = []
 
-class SatelliteContext(BaseModel):
-    latitude: float
-    longitude: float
-    timestamp: datetime
-    tile_url: Optional[str] = None
-    cloud_coverage: Optional[float] = None
-    metadata: Optional[dict] = None
-
 class Impact(BaseModel):
     flight_id: str
     callsign: Optional[str] = None
     position: FlightPosition
     weather_risk: Optional[WeatherRisk] = None
-    satellite_context: Optional[SatelliteContext] = None
     severity: ImpactSeverity
     impact_score: float = Field(ge=0.0, le=100.0)
     description: str

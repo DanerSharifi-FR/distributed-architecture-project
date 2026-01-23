@@ -6,13 +6,14 @@ Endpoints REST pour gérer les impacts météo.
 
 from datetime import datetime
 from typing import Optional
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from bson import ObjectId
 
 from app.models.impact import FlightPosition
 from app.services.impact_calculator import calculate_impact
 from app.services.flight_client import get_flights
+from app.services.satellite_client import trigger_satellite_tile
 from app.db.mongodb import get_db, doc_to_dict
 
 router = APIRouter(prefix="/api", tags=["impacts"])
@@ -42,20 +43,20 @@ async def health():
 
 
 @router.post("/impacts", status_code=201)
-async def create_impact(req: PositionRequest):
+async def create_impact(req: PositionRequest, background_tasks: BackgroundTasks):
     """
     Crée un nouvel impact à partir d'une position de vol.
     
-    1. Génère un ObjectId en avance (pour le satellite-service)
-    2. Reçoit une position (lat, lon, altitude)
-    3. Calcule les risques météo et satellite
-    4. Sauvegarde en base avec l'ID pré-généré
+    Flow:
+    1. Crée l'objet position
+    2. Calcule les risques météo
+    3. Sauvegarde en MongoDB
+    4. Déclenche la génération de tuile satellite (en background)
     5. Retourne l'impact créé
-    """
-    # Générer l'ObjectId en avance
-    # Le satellite-service en a besoin pour nous rappeler via /api/impacts/{id}
-    impact_id = ObjectId()
     
+    Note: Le satellite-service est appelé APRÈS la sauvegarde car
+    il a besoin de récupérer les coordonnées via GET /api/impacts/{id}
+    """
     # Créer l'objet position
     position = FlightPosition(
         flight_id=req.flight_id,
@@ -66,13 +67,18 @@ async def create_impact(req: PositionRequest):
         timestamp=datetime.utcnow()
     )
     
-    # Calculer l'impact (on passe l'ID pré-généré)
-    impact = await calculate_impact(position, str(impact_id))
+    # Calculer l'impact (sans satellite)
+    impact = await calculate_impact(position)
     
-    # Sauvegarder en MongoDB avec l'ID pré-généré
+    # Sauvegarder en MongoDB
+    impact_id = ObjectId()
     doc = impact.model_dump()
-    doc["_id"] = impact_id  # Utiliser l'ID qu'on a généré
+    doc["_id"] = impact_id
     await get_db().impacts.insert_one(doc)
+    
+    # Déclencher la génération de tuile satellite (après sauvegarde)
+    # Le satellite-service va faire GET /api/impacts/{id} pour récupérer lat/lon
+    background_tasks.add_task(trigger_satellite_tile, str(impact_id))
     
     # Retourner l'impact créé
     return {
@@ -94,7 +100,12 @@ async def list_impacts(limit: int = 50):
 
 @router.get("/impacts/{impact_id}")
 async def get_impact(impact_id: str):
-    """Récupère un impact par son ID."""
+    """
+    Récupère un impact par son ID.
+    
+    Note: Cet endpoint est aussi utilisé par le satellite-service
+    pour récupérer les coordonnées (lat/lon) d'un impact.
+    """
     doc = await get_db().impacts.find_one({"_id": ObjectId(impact_id)})
     if not doc:
         raise HTTPException(status_code=404, detail="Impact non trouvé")
@@ -111,14 +122,14 @@ async def delete_impact(impact_id: str):
 
 
 @router.post("/analyze-flights")
-async def analyze_flights(limit: int = 10):
+async def analyze_flights(limit: int = 10, background_tasks: BackgroundTasks = None):
     """
     Analyse les vols en temps réel depuis flight-service.
     
-    1. Récupère les vols actuels depuis flight-service
-    2. Génère un ObjectId pour chaque impact
-    3. Calcule l'impact pour chaque vol (avec l'ID pré-généré)
-    4. Sauvegarde tous les impacts
+    Flow pour chaque vol:
+    1. Calcule l'impact météo
+    2. Sauvegarde en MongoDB
+    3. Déclenche la génération de tuile satellite
     """
     # Récupérer les vols
     flights = await get_flights()
@@ -126,13 +137,20 @@ async def analyze_flights(limit: int = 10):
     # Analyser chaque vol
     results = []
     for flight in flights[:limit]:
-        # Générer l'ObjectId en avance pour le satellite-service
-        impact_id = ObjectId()
+        # Calculer l'impact
+        impact = await calculate_impact(flight)
         
-        impact = await calculate_impact(flight, str(impact_id))
+        # Sauvegarder en MongoDB
+        impact_id = ObjectId()
         doc = impact.model_dump()
-        doc["_id"] = impact_id  # Utiliser l'ID pré-généré
+        doc["_id"] = impact_id
         await get_db().impacts.insert_one(doc)
+        
+        # Déclencher satellite (après sauvegarde)
+        if background_tasks:
+            background_tasks.add_task(trigger_satellite_tile, str(impact_id))
+        else:
+            await trigger_satellite_tile(str(impact_id))
         
         results.append({
             "id": str(impact_id),

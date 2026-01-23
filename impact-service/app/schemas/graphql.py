@@ -14,6 +14,7 @@ from bson import ObjectId
 from app.models.impact import FlightPosition
 from app.services.impact_calculator import calculate_impact
 from app.services.flight_client import get_flights
+from app.services.satellite_client import trigger_satellite_tile
 from app.db.mongodb import get_db
 
 
@@ -87,11 +88,14 @@ class Mutation:
 
     @strawberry.mutation
     async def create_impact(self, position: PositionInput) -> Impact:
-        """Calcule et sauvegarde un impact pour une position."""
+        """
+        Calcule et sauvegarde un impact pour une position.
         
-        # Générer l'ObjectId en avance pour le satellite-service
-        impact_id = ObjectId()
-        
+        Flow:
+        1. Calcule l'impact météo
+        2. Sauvegarde en MongoDB
+        3. Déclenche la génération de tuile satellite
+        """
         # Créer l'objet position
         pos = FlightPosition(
             flight_id=position.flight_id,
@@ -102,13 +106,17 @@ class Mutation:
             timestamp=datetime.utcnow()
         )
         
-        # Calculer l'impact (avec ID pré-généré)
-        impact = await calculate_impact(pos, str(impact_id))
+        # Calculer l'impact (sans satellite)
+        impact = await calculate_impact(pos)
         
-        # Sauvegarder en MongoDB avec l'ID pré-généré
+        # Sauvegarder en MongoDB
+        impact_id = ObjectId()
         doc = impact.model_dump()
         doc["_id"] = impact_id
         await get_db().impacts.insert_one(doc)
+        
+        # Déclencher satellite (après sauvegarde)
+        await trigger_satellite_tile(str(impact_id))
         
         return Impact(
             id=str(impact_id),
@@ -121,19 +129,29 @@ class Mutation:
 
     @strawberry.mutation
     async def analyze_flights(self, limit: int = 10) -> list[Impact]:
-        """Analyse les vols en temps réel."""
+        """
+        Analyse les vols en temps réel.
         
+        Flow pour chaque vol:
+        1. Calcule l'impact météo
+        2. Sauvegarde en MongoDB
+        3. Déclenche la génération de tuile satellite
+        """
         flights = await get_flights()
         results = []
         
         for flight in flights[:limit]:
-            # Générer l'ObjectId en avance pour le satellite-service
-            impact_id = ObjectId()
+            # Calculer l'impact
+            impact = await calculate_impact(flight)
             
-            impact = await calculate_impact(flight, str(impact_id))
+            # Sauvegarder en MongoDB
+            impact_id = ObjectId()
             doc = impact.model_dump()
             doc["_id"] = impact_id
             await get_db().impacts.insert_one(doc)
+            
+            # Déclencher satellite (après sauvegarde)
+            await trigger_satellite_tile(str(impact_id))
             
             results.append(Impact(
                 id=str(impact_id),

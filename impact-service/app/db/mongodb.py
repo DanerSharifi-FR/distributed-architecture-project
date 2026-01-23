@@ -37,11 +37,18 @@ def doc_to_dict(doc: dict) -> dict:
     Convertit un document MongoDB en dict pour l'API.
     
     MongoDB utilise _id (ObjectId), on le convertit en id (string).
+    
+    Note: On inclut latitude/longitude pour que le satellite-service
+    puisse les récupérer via GET /api/impacts/{id}
     """
+    position = doc.get("position", {})
     return {
         "id": str(doc["_id"]),
         "flight_id": doc["flight_id"],
         "callsign": doc.get("callsign"),
+        "latitude": position.get("latitude"),
+        "longitude": position.get("longitude"),
+        "altitude": position.get("altitude"),
         "severity": doc["severity"],
         "impact_score": doc["impact_score"],
         "description": doc["description"]

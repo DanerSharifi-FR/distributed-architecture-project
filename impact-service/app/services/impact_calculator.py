@@ -2,40 +2,40 @@
 Impact Calculator
 =================
 Logique métier pour calculer l'impact météo d'un vol.
+
+Note: Le satellite-service est appelé APRÈS la création de l'impact,
+pas dans ce module. Voir rest.py et graphql.py.
 """
 
 from app.models.impact import Impact, ImpactSeverity, FlightPosition
 from app.services.weather_client import get_weather_risk
-from app.services.satellite_client import get_satellite_context
 
 
-async def calculate_impact(position: FlightPosition, impact_id: str) -> Impact:
+async def calculate_impact(position: FlightPosition) -> Impact:
     """
     Calcule l'impact météo pour une position de vol.
     
     Args:
         position: Position du vol (lat, lon, altitude, etc.)
-        impact_id: ID pré-généré de l'impact (ObjectId MongoDB en string)
     
     Étapes:
     1. Récupère les risques météo (weather-service ou mock)
-    2. Récupère le contexte satellite (satellite-service ou mock)
-    3. Calcule un score de 0 à 100
-    4. Détermine la sévérité (low/medium/high/critical)
+    2. Calcule un score de 0 à 100
+    3. Détermine la sévérité (low/medium/high/critical)
+    
+    Note: Le satellite-service est appelé séparément APRÈS
+    avoir sauvegardé l'impact en base (voir rest.py).
     """
     
-    # 1. Récupérer les données météo et satellite
+    # 1. Récupérer les données météo
     weather = await get_weather_risk(position.latitude, position.longitude, position.altitude)
-    satellite = await get_satellite_context(impact_id, position.latitude, position.longitude)
     
     # 2. Calculer le score d'impact (0-100)
-    #    - 60% basé sur le score météo global
+    #    - 70% basé sur le score météo global
     #    - 30% basé sur le nombre de dangers (max 3)
-    #    - 10% basé sur la couverture nuageuse
     score = (
-        weather.overall_score * 60 +                    # Score météo
-        min(len(weather.hazards) * 10, 30) +            # Nombre de dangers
-        (satellite.cloud_coverage or 0) * 0.1           # Couverture nuageuse
+        weather.overall_score * 70 +                    # Score météo
+        min(len(weather.hazards) * 10, 30)              # Nombre de dangers
     )
     score = min(score, 100)  # Plafonner à 100
     
@@ -64,7 +64,6 @@ async def calculate_impact(position: FlightPosition, impact_id: str) -> Impact:
         callsign=position.callsign,
         position=position,
         weather_risk=weather,
-        satellite_context=satellite,
         severity=severity,
         impact_score=round(score, 2),
         description=description,
