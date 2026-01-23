@@ -1,6 +1,52 @@
 # Aviation Weather Impact - Microservices
 
-Backend microservices qui detecte quand un avion traverse des conditions meteo defavorables.
+## C'est quoi ce projet ?
+
+Une application backend qui **detecte en temps reel quand un avion traverse des conditions meteo dangereuses**.
+
+### Le probleme
+Les avions volent partout dans le monde, et certains traversent des zones avec de mauvaises conditions meteo (orages, vents forts, faible visibilite, etc.). On veut detecter ces situations automatiquement.
+
+### Notre solution
+On recupere les positions des avions en temps reel, on analyse la meteo a leur position, et on calcule un **score d'impact** (0-100) avec une **severite** (low, medium, high, critical).
+
+### Comment ca marche ?
+
+```
+1. On recupere les avions en vol (OpenSky API)
+         ↓
+2. Pour chaque avion, on recupere la meteo (OpenWeather API)
+         ↓
+3. On detecte les dangers: orage, vent fort, visibilite, etc.
+         ↓
+4. On calcule un score d'impact (0-100)
+         ↓
+5. On genere des images satellite de la zone
+         ↓
+6. On sauvegarde tout en base de donnees
+```
+
+### Exemple de resultat
+
+```json
+{
+  "flight_id": "AF1234",
+  "callsign": "AIR FRANCE",
+  "latitude": 48.8566,
+  "longitude": 2.3522,
+  "severity": "high",
+  "impact_score": 72.5,
+  "description": "Vol AF1234 - Dangers: thunderstorm, strong_wind"
+}
+```
+
+**Score:**
+- 0-25 = LOW (conditions normales)
+- 25-50 = MEDIUM (vigilance)
+- 50-75 = HIGH (conditions difficiles)
+- 75-100 = CRITICAL (danger)
+
+---
 
 ## Equipe
 
