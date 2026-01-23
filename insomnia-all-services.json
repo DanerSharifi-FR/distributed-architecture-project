@@ -1,0 +1,510 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-01-23T12:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v2024.5.0",
+  "resources": [
+    {
+      "_id": "wrk_all_services",
+      "parentId": null,
+      "modified": 0,
+      "created": 0,
+      "name": "Aviation Weather Impact - All Services",
+      "description": "Collection complète pour tester tous les micro-services",
+      "scope": "collection",
+      "_type": "workspace"
+    },
+    {
+      "_id": "env_base",
+      "parentId": "wrk_all_services",
+      "modified": 0,
+      "created": 0,
+      "name": "Base Environment",
+      "data": {
+        "impact_url": "http://localhost:8000",
+        "flight_url": "http://localhost:5001",
+        "weather_url": "http://localhost:8081",
+        "satellite_url": "http://localhost:8080"
+      },
+      "dataPropertyOrder": null,
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 0,
+      "_type": "environment"
+    },
+    {
+      "_id": "fld_impact",
+      "parentId": "wrk_all_services",
+      "modified": 0,
+      "created": 0,
+      "name": "🎯 Impact Service (Clovis)",
+      "description": "Cerveau - calcule les impacts météo",
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_impact_health",
+      "parentId": "fld_impact",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.impact_url }}/api/health",
+      "name": "Health Check",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 0,
+      "_type": "request"
+    },
+    {
+      "_id": "req_impact_create",
+      "parentId": "fld_impact",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.impact_url }}/api/impacts",
+      "name": "POST Create Impacts (auto)",
+      "description": "Récupère les vols temps réel et crée des impacts",
+      "method": "POST",
+      "body": {},
+      "parameters": [
+        {
+          "name": "limit",
+          "value": "5"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 1,
+      "_type": "request"
+    },
+    {
+      "_id": "req_impact_list",
+      "parentId": "fld_impact",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.impact_url }}/api/impacts",
+      "name": "GET List Impacts",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "limit",
+          "value": "50"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2,
+      "_type": "request"
+    },
+    {
+      "_id": "req_impact_get",
+      "parentId": "fld_impact",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.impact_url }}/api/impacts/IMPACT_ID_HERE",
+      "name": "GET Impact by ID",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 3,
+      "_type": "request"
+    },
+    {
+      "_id": "req_impact_delete",
+      "parentId": "fld_impact",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.impact_url }}/api/impacts/IMPACT_ID_HERE",
+      "name": "DELETE Impact",
+      "method": "DELETE",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 4,
+      "_type": "request"
+    },
+    {
+      "_id": "req_impact_stats",
+      "parentId": "fld_impact",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.impact_url }}/api/stats",
+      "name": "GET Stats",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 6,
+      "_type": "request"
+    },
+    {
+      "_id": "req_impact_graphql",
+      "parentId": "fld_impact",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.impact_url }}/graphql",
+      "name": "GraphQL: List Impacts",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"query\": \"{ impacts(limit: 10) { id flightId callsign severity impactScore description } }\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 7,
+      "_type": "request"
+    },
+    {
+      "_id": "req_impact_graphql_create",
+      "parentId": "fld_impact",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.impact_url }}/graphql",
+      "name": "GraphQL: Create Impacts",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"query\": \"mutation { createImpacts(limit: 5) { id flightId callsign severity impactScore } }\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 8,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_flight",
+      "parentId": "wrk_all_services",
+      "modified": 0,
+      "created": 0,
+      "name": "✈️ Flight Service (Bastien)",
+      "description": "Récupère les vols via OpenSky API",
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_flight_global",
+      "parentId": "fld_flight",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.flight_url }}/flights",
+      "name": "GET Flights (Global)",
+      "description": "Tous les vols dans le monde",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 0,
+      "_type": "request"
+    },
+    {
+      "_id": "req_flight_bbox",
+      "parentId": "fld_flight",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.flight_url }}/flights",
+      "name": "GET Flights (Bbox France)",
+      "description": "Vols dans une bounding box",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        { "name": "lamin", "value": "41.0" },
+        { "name": "lomin", "value": "-5.0" },
+        { "name": "lamax", "value": "51.0" },
+        { "name": "lomax", "value": "10.0" }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 1,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_weather",
+      "parentId": "wrk_all_services",
+      "modified": 0,
+      "created": 0,
+      "name": "🌦️ Weather Service (Daner)",
+      "description": "Proxy OpenWeather avec cache - PHP/Slim",
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_weather_health",
+      "parentId": "fld_weather",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.weather_url }}/healthz",
+      "name": "Health Check",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 0,
+      "_type": "request"
+    },
+    {
+      "_id": "req_weather_onecall",
+      "parentId": "fld_weather",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.weather_url }}/v1/onecall",
+      "name": "GET OneCall Weather",
+      "description": "Données météo complètes via OpenWeather",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        { "name": "lat", "value": "48.8566" },
+        { "name": "lon", "value": "2.3522" }
+      ],
+      "headers": [
+        { "name": "X-Internal-Token", "value": "YOUR_INTERNAL_TOKEN" }
+      ],
+      "authentication": {},
+      "metaSortKey": 1,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_satellite",
+      "parentId": "wrk_all_services",
+      "modified": 0,
+      "created": 0,
+      "name": "🛰️ Satellite Service (Thomas)",
+      "description": "Imagerie satellite - Kotlin/Spring Boot",
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_satellite_swagger",
+      "parentId": "fld_satellite",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.satellite_url }}/swagger-ui.html",
+      "name": "Swagger UI",
+      "description": "Documentation interactive de l'API",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 0,
+      "_type": "request"
+    },
+    {
+      "_id": "req_satellite_put",
+      "parentId": "fld_satellite",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.satellite_url }}/satellites/tiles/impacts/IMPACT_ID_HERE",
+      "name": "PUT Create Satellite Tile",
+      "description": "Génère des tuiles satellite pour un impact",
+      "method": "PUT",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 1,
+      "_type": "request"
+    },
+    {
+      "_id": "req_satellite_get",
+      "parentId": "fld_satellite",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.satellite_url }}/satellites/tiles/impacts/IMPACT_ID_HERE",
+      "name": "GET Satellite Tile",
+      "description": "Récupère les tuiles satellite d'un impact",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_demo_services",
+      "parentId": "wrk_all_services",
+      "modified": 0,
+      "created": 0,
+      "name": "🎬 DEMO 1 - Chaque Service",
+      "description": "Montrer chaque service individuellement",
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_demo_flight",
+      "parentId": "fld_demo_services",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.flight_url }}/flights",
+      "name": "1. BASTIEN - flight-service",
+      "description": "Récupère les avions en temps réel via OpenSky API",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 0,
+      "_type": "request"
+    },
+    {
+      "_id": "req_demo_weather",
+      "parentId": "fld_demo_services",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.weather_url }}/healthz",
+      "name": "2. DANER - weather-service (health)",
+      "description": "Service météo PHP/Slim",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 1,
+      "_type": "request"
+    },
+    {
+      "_id": "req_demo_satellite",
+      "parentId": "fld_demo_services",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.satellite_url }}/swagger-ui.html",
+      "name": "3. THOMAS - satellite-service (swagger)",
+      "description": "Service satellite Kotlin/Spring",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2,
+      "_type": "request"
+    },
+    {
+      "_id": "req_demo_impact_health",
+      "parentId": "fld_demo_services",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.impact_url }}/api/health",
+      "name": "4. CLOVIS - impact-service (health)",
+      "description": "Mon service - vérifie connexion MongoDB",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 3,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_demo_integration",
+      "parentId": "wrk_all_services",
+      "modified": 0,
+      "created": 0,
+      "name": "🎬 DEMO 2 - Integration (impact-service)",
+      "description": "Impact-service appelle les autres services",
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_demo_int_step1",
+      "parentId": "fld_demo_integration",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.impact_url }}/api/impacts",
+      "name": "1. Créer impacts (auto)",
+      "description": "impact-service → flight-service → weather → MongoDB → satellite-service",
+      "method": "POST",
+      "body": {},
+      "parameters": [
+        { "name": "limit", "value": "3" }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 0,
+      "_type": "request"
+    },
+    {
+      "_id": "req_demo_int_step2",
+      "parentId": "fld_demo_integration",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.impact_url }}/api/impacts",
+      "name": "2. Voir impacts créés (REST)",
+      "description": "Les impacts sont dans MongoDB",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 1,
+      "_type": "request"
+    },
+    {
+      "_id": "req_demo_int_step3",
+      "parentId": "fld_demo_integration",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.impact_url }}/graphql",
+      "name": "3. Voir impacts (GraphQL)",
+      "description": "Même données via GraphQL",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"query\": \"{ impacts(limit: 5) { id flightId callsign severity impactScore description } }\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "authentication": {},
+      "metaSortKey": 2,
+      "_type": "request"
+    },
+    {
+      "_id": "req_demo_int_step4",
+      "parentId": "fld_demo_integration",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.impact_url }}/graphql",
+      "name": "4. GraphQL: Créer impacts",
+      "description": "Même chose via GraphQL",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"query\": \"mutation { createImpacts(limit: 2) { id flightId severity impactScore } }\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "authentication": {},
+      "metaSortKey": 3,
+      "_type": "request"
+    },
+    {
+      "_id": "req_demo_int_step5",
+      "parentId": "fld_demo_integration",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.satellite_url }}/satellites/tiles/impacts/COPY_IMPACT_ID_HERE",
+      "name": "5. Vérifier tuile satellite créée",
+      "description": "Copier l'ID de l'impact et vérifier les tuiles",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 4,
+      "_type": "request"
+    },
+    {
+      "_id": "req_demo_int_step6",
+      "parentId": "fld_demo_integration",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.impact_url }}/api/stats",
+      "name": "6. Stats finales",
+      "description": "Nombre total d'impacts en base",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 5,
+      "_type": "request"
+    }
+  ]
+}

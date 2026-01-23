@@ -1,0 +1,237 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-01-23T12:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v2024.5.0",
+  "resources": [
+    {
+      "_id": "wrk_impact_service",
+      "parentId": null,
+      "modified": 0,
+      "created": 0,
+      "name": "Impact Service API",
+      "description": "API REST + GraphQL pour le calcul d'impacts météo aviation",
+      "scope": "collection",
+      "_type": "workspace"
+    },
+    {
+      "_id": "env_base",
+      "parentId": "wrk_impact_service",
+      "modified": 0,
+      "created": 0,
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:8000"
+      },
+      "dataPropertyOrder": null,
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 0,
+      "_type": "environment"
+    },
+    {
+      "_id": "fld_rest",
+      "parentId": "wrk_impact_service",
+      "modified": 0,
+      "created": 0,
+      "name": "REST API",
+      "description": "Endpoints REST",
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_health",
+      "parentId": "fld_rest",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.base_url }}/api/health",
+      "name": "Health Check",
+      "description": "Vérifie l'état du service et de MongoDB",
+      "method": "GET",
+      "body": {},
+      "headers": [
+        { "name": "Accept", "value": "application/json" }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "_type": "request"
+    },
+    {
+      "_id": "req_create_impacts",
+      "parentId": "fld_rest",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.base_url }}/api/impacts",
+      "name": "POST Create Impacts (auto)",
+      "description": "Récupère les vols temps réel depuis flight-service et crée des impacts",
+      "method": "POST",
+      "body": {},
+      "parameters": [
+        { "name": "limit", "value": "5" }
+      ],
+      "headers": [
+        { "name": "Accept", "value": "application/json" }
+      ],
+      "authentication": {},
+      "metaSortKey": 1,
+      "_type": "request"
+    },
+    {
+      "_id": "req_list_impacts",
+      "parentId": "fld_rest",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.base_url }}/api/impacts",
+      "name": "GET List Impacts",
+      "description": "Liste tous les impacts (limit=50 par défaut)",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        { "name": "limit", "value": "50" }
+      ],
+      "headers": [
+        { "name": "Accept", "value": "application/json" }
+      ],
+      "authentication": {},
+      "metaSortKey": 2,
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_impact",
+      "parentId": "fld_rest",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.base_url }}/api/impacts/IMPACT_ID_HERE",
+      "name": "GET Impact by ID",
+      "description": "Récupère un impact par son ObjectId MongoDB",
+      "method": "GET",
+      "body": {},
+      "headers": [
+        { "name": "Accept", "value": "application/json" }
+      ],
+      "authentication": {},
+      "metaSortKey": 3,
+      "_type": "request"
+    },
+    {
+      "_id": "req_delete_impact",
+      "parentId": "fld_rest",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.base_url }}/api/impacts/IMPACT_ID_HERE",
+      "name": "DELETE Impact",
+      "description": "Supprime un impact",
+      "method": "DELETE",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 4,
+      "_type": "request"
+    },
+    {
+      "_id": "req_stats",
+      "parentId": "fld_rest",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.base_url }}/api/stats",
+      "name": "GET Stats",
+      "description": "Statistiques sur les impacts",
+      "method": "GET",
+      "body": {},
+      "headers": [
+        { "name": "Accept", "value": "application/json" }
+      ],
+      "authentication": {},
+      "metaSortKey": 5,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_graphql",
+      "parentId": "wrk_impact_service",
+      "modified": 0,
+      "created": 0,
+      "name": "GraphQL",
+      "description": "Requêtes GraphQL",
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_gql_list_impacts",
+      "parentId": "fld_graphql",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.base_url }}/graphql",
+      "name": "Query: List Impacts",
+      "description": "Liste les impacts via GraphQL",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"query\": \"query { impacts(limit: 20) { id flightId callsign severity impactScore description } }\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "_type": "request"
+    },
+    {
+      "_id": "req_gql_get_impact",
+      "parentId": "fld_graphql",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.base_url }}/graphql",
+      "name": "Query: Get Impact by ID",
+      "description": "Récupère un impact par ID via GraphQL",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"query\": \"query { impact(id: \\\"IMPACT_ID_HERE\\\") { id flightId callsign severity impactScore description } }\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "authentication": {},
+      "metaSortKey": 1,
+      "_type": "request"
+    },
+    {
+      "_id": "req_gql_stats",
+      "parentId": "fld_graphql",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.base_url }}/graphql",
+      "name": "Query: Stats",
+      "description": "Statistiques via GraphQL",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"query\": \"query { stats }\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "authentication": {},
+      "metaSortKey": 2,
+      "_type": "request"
+    },
+    {
+      "_id": "req_gql_create_impacts",
+      "parentId": "fld_graphql",
+      "modified": 0,
+      "created": 0,
+      "url": "{{ _.base_url }}/graphql",
+      "name": "Mutation: Create Impacts",
+      "description": "Récupère les vols et crée des impacts via GraphQL",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"query\": \"mutation { createImpacts(limit: 5) { id flightId callsign severity impactScore description } }\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "authentication": {},
+      "metaSortKey": 3,
+      "_type": "request"
+    }
+  ]
+}
