@@ -72,7 +72,7 @@ def _parse_weather_response(data: dict, lat: float, lon: float, alt: float) -> W
     - Pluie/neige intense
     """
     hazards = []
-    overall_score = 0.3  # Score de base
+    overall_score = 0.3  # Score de base 
     
     current = data.get("current", {})
     

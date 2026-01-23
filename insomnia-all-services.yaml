@@ -327,22 +327,22 @@ resources:
     metaSortKey: 2
     _type: request
 
-  # ==================== DEMO WORKFLOW ====================
-  - _id: fld_demo
+  # ==================== DEMO PART 1: EACH SERVICE ====================
+  - _id: fld_demo_services
     parentId: wrk_all_services
     modified: 0
     created: 0
-    name: "🎬 Demo Workflow"
-    description: "Scénario de démonstration"
+    name: "🎬 DEMO 1 - Chaque Service"
+    description: "Montrer chaque service individuellement"
     _type: request_group
 
-  - _id: req_demo_step1
-    parentId: fld_demo
+  - _id: req_demo_flight
+    parentId: fld_demo_services
     modified: 0
     created: 0
-    url: "{{ _.impact_url }}/api/health"
-    name: "1. Vérifier services"
-    description: "Vérifie que impact-service et MongoDB fonctionnent"
+    url: "{{ _.flight_url }}/flights"
+    name: "1. BASTIEN - flight-service"
+    description: "Récupère les avions en temps réel via OpenSky API"
     method: GET
     body: {}
     headers: []
@@ -350,13 +350,13 @@ resources:
     metaSortKey: 0
     _type: request
 
-  - _id: req_demo_step2
-    parentId: fld_demo
+  - _id: req_demo_weather
+    parentId: fld_demo_services
     modified: 0
     created: 0
-    url: "{{ _.flight_url }}/flights"
-    name: "2. Voir les vols en temps réel"
-    description: "Récupère tous les vols via OpenSky"
+    url: "{{ _.weather_url }}/healthz"
+    name: "2. DANER - weather-service (health)"
+    description: "Service météo PHP/Slim - vérifie qu'il tourne"
     method: GET
     body: {}
     headers: []
@@ -364,30 +364,27 @@ resources:
     metaSortKey: 1
     _type: request
 
-  - _id: req_demo_step3
-    parentId: fld_demo
+  - _id: req_demo_satellite
+    parentId: fld_demo_services
     modified: 0
     created: 0
-    url: "{{ _.impact_url }}/api/analyze-flights"
-    name: "3. Analyser vols (crée impacts + tuiles)"
-    description: "Analyse 5 vols et déclenche satellite-service"
-    method: POST
+    url: "{{ _.satellite_url }}/swagger-ui.html"
+    name: "3. THOMAS - satellite-service (swagger)"
+    description: "Service satellite Kotlin/Spring - ouvrir dans navigateur"
+    method: GET
     body: {}
-    parameters:
-      - name: limit
-        value: "5"
     headers: []
     authentication: {}
     metaSortKey: 2
     _type: request
 
-  - _id: req_demo_step4
-    parentId: fld_demo
+  - _id: req_demo_impact_health
+    parentId: fld_demo_services
     modified: 0
     created: 0
-    url: "{{ _.impact_url }}/api/impacts"
-    name: "4. Voir les impacts créés"
-    description: "Liste tous les impacts avec leur sévérité"
+    url: "{{ _.impact_url }}/api/health"
+    name: "4. CLOVIS - impact-service (health)"
+    description: "Mon service - vérifie connexion MongoDB"
     method: GET
     body: {}
     headers: []
@@ -395,13 +392,53 @@ resources:
     metaSortKey: 3
     _type: request
 
-  - _id: req_demo_step5
-    parentId: fld_demo
+  # ==================== DEMO PART 2: INTEGRATION ====================
+  - _id: fld_demo_integration
+    parentId: wrk_all_services
+    modified: 0
+    created: 0
+    name: "🎬 DEMO 2 - Integration (impact-service)"
+    description: "Impact-service appelle les autres services"
+    _type: request_group
+
+  - _id: req_demo_int_step1
+    parentId: fld_demo_integration
+    modified: 0
+    created: 0
+    url: "{{ _.impact_url }}/api/analyze-flights"
+    name: "1. Analyser vols réels"
+    description: "impact-service → appelle flight-service → appelle weather (mock) → sauvegarde MongoDB → appelle satellite-service"
+    method: POST
+    body: {}
+    parameters:
+      - name: limit
+        value: "3"
+    headers: []
+    authentication: {}
+    metaSortKey: 0
+    _type: request
+
+  - _id: req_demo_int_step2
+    parentId: fld_demo_integration
+    modified: 0
+    created: 0
+    url: "{{ _.impact_url }}/api/impacts"
+    name: "2. Voir impacts créés (REST)"
+    description: "Les impacts sont dans MongoDB avec score et sévérité"
+    method: GET
+    body: {}
+    headers: []
+    authentication: {}
+    metaSortKey: 1
+    _type: request
+
+  - _id: req_demo_int_step3
+    parentId: fld_demo_integration
     modified: 0
     created: 0
     url: "{{ _.impact_url }}/graphql"
-    name: "5. GraphQL Query"
-    description: "Même données via GraphQL"
+    name: "3. Voir impacts (GraphQL)"
+    description: "Même données via GraphQL - montre qu'on a REST + GraphQL"
     method: POST
     body:
       mimeType: application/json
@@ -413,5 +450,58 @@ resources:
       - name: Content-Type
         value: application/json
     authentication: {}
+    metaSortKey: 2
+    _type: request
+
+  - _id: req_demo_int_step4
+    parentId: fld_demo_integration
+    modified: 0
+    created: 0
+    url: "{{ _.impact_url }}/api/impacts"
+    name: "4. Créer impact manuel"
+    description: "POST avec lat/lon → calcule score → sauvegarde → déclenche satellite"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "flight_id": "DEMO-PARIS",
+          "callsign": "VOL DEMO",
+          "latitude": 48.8566,
+          "longitude": 2.3522,
+          "altitude": 35000
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    authentication: {}
+    metaSortKey: 3
+    _type: request
+
+  - _id: req_demo_int_step5
+    parentId: fld_demo_integration
+    modified: 0
+    created: 0
+    url: "{{ _.satellite_url }}/satellites/tiles/impacts/COPY_IMPACT_ID_HERE"
+    name: "5. Vérifier tuile satellite créée"
+    description: "Copier l'ID de l'impact créé et vérifier que satellite-service a généré les tuiles"
+    method: GET
+    body: {}
+    headers: []
+    authentication: {}
     metaSortKey: 4
+    _type: request
+
+  - _id: req_demo_int_step6
+    parentId: fld_demo_integration
+    modified: 0
+    created: 0
+    url: "{{ _.impact_url }}/api/stats"
+    name: "6. Stats finales"
+    description: "Nombre total d'impacts en base"
+    method: GET
+    body: {}
+    headers: []
+    authentication: {}
+    metaSortKey: 5
     _type: request
