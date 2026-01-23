@@ -30,13 +30,18 @@ Service de calcul d'impact météo pour les vols. Détecte quand un avion traver
 │         ▼        ▼        ▼                            │
 │    Weather   Satellite  Flight                         │
 │    Client    Client     Client                         │
-│   (mock)    (mock)    (real)                           │
+│      │          │          │                           │
+│      ▼          ▼          ▼                           │
+│  weather-   satellite-  flight-                        │
+│  service    service     service                        │
+│  (8081)     (8080)      (5001)                         │
 │                                                         │
 ├─────────────────────────────────────────────────────────┤
 │                   Motor (driver)                        │
 │                       │                                 │
 │                       ▼                                 │
-│                   MongoDB                               │
+│       MongoDB (collection: 'impact')                    │
+│            (partagé avec satellite-service)             │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -254,19 +259,47 @@ Variables d'environnement (dans `.env` ou docker-compose):
 ### flight-service (Bastien) ✅
 - Port: 5001
 - Endpoint: `GET /flights`
-- Status: **Intégré**
+- Status: **Intégré** - Récupère les vols en temps réel via OpenSky
 
-### weather-service (Daner) ⏳
-- Port: 8001
-- Status: **Mock** (en attente)
+### weather-service (Daner) ✅
+- Port: 8081
+- Endpoint: `GET /v1/onecall?lat=...&lon=...`
+- Status: **Intégré** (mais utilise mock par défaut, set `USE_MOCK_WEATHER=false` pour activer)
 
-### satellite-service (Thomas) ⏳
+### satellite-service (Thomas) ✅
 - Port: 8080
-- Status: **Mock** (en attente)
+- Endpoint: `PUT /satellites/tiles/impacts/{impactId}`
+- Status: **Intégré** - Génère des tuiles satellite automatiquement après chaque impact
 
+## Flow d'intégration
 
-MODIF
-- supprime ce que je donne envers satellite-service pour la latitude et la longitude etc mais je garde le impact_id .. le raccrocher à daner (inshallah) quand il faura fini (ex : http://localhost:8080/satellites/tiles/impacts/[impactId])
-- supprimer mon satelitecontext dans mon schema. 
-- changer le get_satellite_context dans mon satelite client par un put.
-- appel service satellite après avoir crée l'impact.
+```
+1. POST /api/impacts ou POST /api/analyze-flights
+   │
+   ├─► Calcule l'impact météo (weather-service ou mock)
+   │
+   ├─► Sauvegarde en MongoDB (collection 'impact')
+   │
+   └─► Déclenche satellite-service (PUT /satellites/tiles/impacts/{id})
+       │
+       └─► satellite-service lit l'impact depuis MongoDB
+           et génère les tuiles via OpenWeather
+```
+
+## Test rapide
+
+```bash
+# 1. Lancer tous les services
+docker compose up -d
+
+# 2. Créer un impact
+curl -X POST http://localhost:8000/api/impacts \
+  -H "Content-Type: application/json" \
+  -d '{"flight_id": "TEST001", "latitude": 48.8, "longitude": 2.3, "altitude": 35000}'
+
+# 3. Analyser des vols réels
+curl -X POST "http://localhost:8000/api/analyze-flights?limit=5"
+
+# 4. Voir les impacts
+curl http://localhost:8000/api/impacts
+```
