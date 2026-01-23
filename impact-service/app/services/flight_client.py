@@ -42,16 +42,21 @@ async def get_flights(
             data = response.json()
         
         # Convertir en FlightPosition
+        # Le flight-service retourne un array directement
         flights = []
-        for f in data.get("flights", []):
+        for f in data:
+            # Skip flights with missing position data
+            if not f.get("lat") or not f.get("lon"):
+                continue
+                
             flights.append(FlightPosition(
                 flight_id=f.get("icao24", "unknown"),
                 callsign=f.get("callsign"),
-                latitude=f.get("latitude", 0),
-                longitude=f.get("longitude", 0),
-                altitude=f.get("altitude", 0),
-                speed=f.get("velocity"),
-                heading=f.get("heading"),
+                latitude=f.get("lat", 0),
+                longitude=f.get("lon", 0),
+                altitude=f.get("baro_altitude_m", 0) or 0,
+                speed=f.get("velocity_mps"),
+                heading=f.get("true_track_deg"),
                 timestamp=datetime.utcnow()
             ))
         

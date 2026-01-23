@@ -63,13 +63,13 @@ class Query:
     @strawberry.field
     async def impacts(self, limit: int = 50) -> list[Impact]:
         """Liste tous les impacts."""
-        cursor = get_db().impacts.find().limit(limit)
+        cursor = get_db().impact.find().limit(limit)
         return [doc_to_impact(doc) async for doc in cursor]
 
     @strawberry.field
     async def impact(self, id: str) -> Optional[Impact]:
         """Récupère un impact par ID."""
-        doc = await get_db().impacts.find_one({"_id": ObjectId(id)})
+        doc = await get_db().impact.find_one({"_id": ObjectId(id)})
         if not doc:
             return None
         return doc_to_impact(doc)
@@ -77,7 +77,7 @@ class Query:
     @strawberry.field
     async def stats(self) -> str:
         """Nombre total d'impacts."""
-        count = await get_db().impacts.count_documents({})
+        count = await get_db().impact.count_documents({})
         return f"Total: {count} impacts"
 
 
@@ -113,7 +113,7 @@ class Mutation:
         impact_id = ObjectId()
         doc = impact.model_dump()
         doc["_id"] = impact_id
-        await get_db().impacts.insert_one(doc)
+        await get_db().impact.insert_one(doc)
         
         # Déclencher satellite (après sauvegarde)
         await trigger_satellite_tile(str(impact_id))
@@ -148,7 +148,7 @@ class Mutation:
             impact_id = ObjectId()
             doc = impact.model_dump()
             doc["_id"] = impact_id
-            await get_db().impacts.insert_one(doc)
+            await get_db().impact.insert_one(doc)
             
             # Déclencher satellite (après sauvegarde)
             await trigger_satellite_tile(str(impact_id))

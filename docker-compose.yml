@@ -1,11 +1,6 @@
 services:
-  satellite:
-    build:
-      context: satellite-service
-      dockerfile: Dockerfile
-    ports:
-      - '8080:8080'
-
+  # ============ CORE SERVICES ============
+  
   flight-service:
     build: ./flight-service
     ports:
@@ -19,14 +14,56 @@ services:
       - "8000:8000"
     environment:
       - MONGO_URL=mongodb://mongo:27017
+      - MONGO_DB=archi_project
       - FLIGHT_SERVICE_URL=http://flight-service:5000
+      - WEATHER_SERVICE_URL=http://weather-service:8080
+      - SATELLITE_SERVICE_URL=http://satellite-service:8080
+      - WEATHER_INTERNAL_TOKEN=${WEATHER_INTERNAL_TOKEN:-}
       - USE_MOCK_WEATHER=true
-      - USE_MOCK_SATELLITE=true
+      - USE_MOCK_SATELLITE=false
     depends_on:
       - mongo
       - flight-service
     networks:
       - app-network
+
+  weather-service:
+    build: ./weather-service/docker
+    ports:
+      - "8081:8080"
+    environment:
+      - APP_ENV=dev
+      - APP_DEBUG=1
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY:-}
+      - INTERNAL_TOKEN=${WEATHER_INTERNAL_TOKEN:-}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+    networks:
+      - app-network
+
+  satellite-service:
+    build:
+      context: satellite-service
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_MONGODB_HOST=mongo
+      - SPRING_MONGODB_PORT=27017
+      - SPRING_MONGODB_DATABASE=archi_project
+      - SATELLITE_MINIO_ENDPOINT=http://minio:9000
+      - SATELLITE_MINIO_ACCESSKEY=minioadmin
+      - SATELLITE_MINIO_SECRETKEY=password
+      - SATELLITE_OWM_APIKEY=${OPENWEATHER_API_KEY:-728d27c984b8b3e53847db79697a23de}
+    depends_on:
+      - mongo
+      - minio
+    networks:
+      - app-network
+
+  # ============ INFRASTRUCTURE ============
 
   mongo:
     image: mongo:7
@@ -37,25 +74,30 @@ services:
     networks:
       - app-network
 
-  minio:
-    image: 'minio/minio:latest'
+  redis:
+    image: redis:7-alpine
     ports:
-      - '9000:9000'
-      - '8900:8900'
+      - "6379:6379"
+    networks:
+      - app-network
+
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "8900:8900"
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: password
     volumes:
-      - 'minio:/data/minio'
-    command: 'minio server /data/minio --console-address ":8900"'
+      - minio:/data/minio
+    command: minio server /data/minio --console-address ":8900"
     healthcheck:
-      test:
-        - CMD
-        - curl
-        - '-f'
-        - 'http://localhost:9000/minio/health/live'
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       retries: 3
       timeout: 5s
+    networks:
+      - app-network
 
 networks:
   app-network:

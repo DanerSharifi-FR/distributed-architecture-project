@@ -36,7 +36,7 @@ class PositionRequest(BaseModel):
 async def health():
     """Vérifie que le service et MongoDB fonctionnent."""
     try:
-        await get_db().impacts.find_one()
+        await get_db().impact.find_one()
         return {"status": "ok", "mongo": True}
     except:
         return {"status": "error", "mongo": False}
@@ -74,7 +74,7 @@ async def create_impact(req: PositionRequest, background_tasks: BackgroundTasks)
     impact_id = ObjectId()
     doc = impact.model_dump()
     doc["_id"] = impact_id
-    await get_db().impacts.insert_one(doc)
+    await get_db().impact.insert_one(doc)
     
     # Déclencher la génération de tuile satellite (après sauvegarde)
     # Le satellite-service va faire GET /api/impacts/{id} pour récupérer lat/lon
@@ -94,7 +94,7 @@ async def create_impact(req: PositionRequest, background_tasks: BackgroundTasks)
 @router.get("/impacts")
 async def list_impacts(limit: int = 50):
     """Liste tous les impacts (limité à 50 par défaut)."""
-    cursor = get_db().impacts.find().limit(limit)
+    cursor = get_db().impact.find().limit(limit)
     return [doc_to_dict(doc) async for doc in cursor]
 
 
@@ -106,7 +106,7 @@ async def get_impact(impact_id: str):
     Note: Cet endpoint est aussi utilisé par le satellite-service
     pour récupérer les coordonnées (lat/lon) d'un impact.
     """
-    doc = await get_db().impacts.find_one({"_id": ObjectId(impact_id)})
+    doc = await get_db().impact.find_one({"_id": ObjectId(impact_id)})
     if not doc:
         raise HTTPException(status_code=404, detail="Impact non trouvé")
     return doc_to_dict(doc)
@@ -115,7 +115,7 @@ async def get_impact(impact_id: str):
 @router.delete("/impacts/{impact_id}")
 async def delete_impact(impact_id: str):
     """Supprime un impact."""
-    result = await get_db().impacts.delete_one({"_id": ObjectId(impact_id)})
+    result = await get_db().impact.delete_one({"_id": ObjectId(impact_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Impact non trouvé")
     return {"deleted": True}
@@ -144,7 +144,7 @@ async def analyze_flights(limit: int = 10, background_tasks: BackgroundTasks = N
         impact_id = ObjectId()
         doc = impact.model_dump()
         doc["_id"] = impact_id
-        await get_db().impacts.insert_one(doc)
+        await get_db().impact.insert_one(doc)
         
         # Déclencher satellite (après sauvegarde)
         if background_tasks:
@@ -165,5 +165,5 @@ async def analyze_flights(limit: int = 10, background_tasks: BackgroundTasks = N
 @router.get("/stats")
 async def stats():
     """Statistiques sur les impacts."""
-    count = await get_db().impacts.count_documents({})
+    count = await get_db().impact.count_documents({})
     return {"total": count}

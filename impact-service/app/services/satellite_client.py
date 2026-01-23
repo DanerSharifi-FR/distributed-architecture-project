@@ -39,7 +39,7 @@ async def trigger_satellite_tile(impact_id: str) -> bool:
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
             response = await client.put(
-                f"{settings.satellite_service_url}/api/satellite/tiles/impacts/{impact_id}"
+                f"{settings.satellite_service_url}/satellites/tiles/impacts/{impact_id}"
             )
             response.raise_for_status()
             print(f"🛰️ Satellite tile generated for impact {impact_id}")
