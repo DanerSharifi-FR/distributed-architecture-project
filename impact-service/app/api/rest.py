@@ -4,30 +4,15 @@ REST API
 Endpoints REST pour gérer les impacts météo.
 """
 
-from datetime import datetime
-from typing import Optional
 from fastapi import APIRouter, HTTPException, BackgroundTasks
-from pydantic import BaseModel
 from bson import ObjectId
 
-from app.models.impact import FlightPosition
 from app.services.impact_calculator import calculate_impact
 from app.services.flight_client import get_flights
 from app.services.satellite_client import trigger_satellite_tile
 from app.db.mongodb import get_db, doc_to_dict
 
 router = APIRouter(prefix="/api", tags=["impacts"])
-
-
-# ============ SCHEMAS (request/response) ============
-
-class PositionRequest(BaseModel):
-    """Données pour créer un impact."""
-    flight_id: str
-    latitude: float
-    longitude: float
-    altitude: float
-    callsign: Optional[str] = None
 
 
 # ============ ROUTES ============
@@ -43,52 +28,49 @@ async def health():
 
 
 @router.post("/impacts", status_code=201)
-async def create_impact(req: PositionRequest, background_tasks: BackgroundTasks):
+async def create_impacts(limit: int = 10, background_tasks: BackgroundTasks = None):
     """
-    Crée un nouvel impact à partir d'une position de vol.
+    Analyse les vols en temps réel depuis flight-service et crée des impacts.
     
     Flow:
-    1. Crée l'objet position
-    2. Calcule les risques météo
+    1. Récupère les vols depuis flight-service (Bastien)
+    2. Pour chaque vol: calcule l'impact météo
     3. Sauvegarde en MongoDB
-    4. Déclenche la génération de tuile satellite (en background)
-    5. Retourne l'impact créé
+    4. Déclenche satellite-service (Thomas) pour générer les tuiles
     
-    Note: Le satellite-service est appelé APRÈS la sauvegarde car
-    il a besoin de récupérer les coordonnées via GET /api/impacts/{id}
+    Paramètre:
+    - limit: nombre de vols à analyser (défaut: 10)
     """
-    # Créer l'objet position
-    position = FlightPosition(
-        flight_id=req.flight_id,
-        callsign=req.callsign,
-        latitude=req.latitude,
-        longitude=req.longitude,
-        altitude=req.altitude,
-        timestamp=datetime.utcnow()
-    )
+    # Récupérer les vols depuis flight-service
+    flights = await get_flights()
     
-    # Calculer l'impact (sans satellite)
-    impact = await calculate_impact(position)
+    # Analyser chaque vol
+    results = []
+    for flight in flights[:limit]:
+        # Calculer l'impact météo
+        impact = await calculate_impact(flight)
+        
+        # Sauvegarder en MongoDB
+        impact_id = ObjectId()
+        doc = impact.model_dump()
+        doc["_id"] = impact_id
+        await get_db().impact.insert_one(doc)
+        
+        # Déclencher satellite-service (après sauvegarde)
+        if background_tasks:
+            background_tasks.add_task(trigger_satellite_tile, str(impact_id))
+        else:
+            await trigger_satellite_tile(str(impact_id))
+        
+        results.append({
+            "id": str(impact_id),
+            "flight_id": impact.flight_id,
+            "callsign": impact.callsign,
+            "severity": impact.severity.value,
+            "impact_score": impact.impact_score
+        })
     
-    # Sauvegarder en MongoDB
-    impact_id = ObjectId()
-    doc = impact.model_dump()
-    doc["_id"] = impact_id
-    await get_db().impact.insert_one(doc)
-    
-    # Déclencher la génération de tuile satellite (après sauvegarde)
-    # Le satellite-service va faire GET /api/impacts/{id} pour récupérer lat/lon
-    background_tasks.add_task(trigger_satellite_tile, str(impact_id))
-    
-    # Retourner l'impact créé
-    return {
-        "id": str(impact_id),
-        "flight_id": impact.flight_id,
-        "callsign": impact.callsign,
-        "severity": impact.severity.value,
-        "impact_score": impact.impact_score,
-        "description": impact.description
-    }
+    return {"analyzed": len(results), "impacts": results}
 
 
 @router.get("/impacts")
@@ -119,47 +101,6 @@ async def delete_impact(impact_id: str):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Impact non trouvé")
     return {"deleted": True}
-
-
-@router.post("/analyze-flights")
-async def analyze_flights(limit: int = 10, background_tasks: BackgroundTasks = None):
-    """
-    Analyse les vols en temps réel depuis flight-service.
-    
-    Flow pour chaque vol:
-    1. Calcule l'impact météo
-    2. Sauvegarde en MongoDB
-    3. Déclenche la génération de tuile satellite
-    """
-    # Récupérer les vols
-    flights = await get_flights()
-    
-    # Analyser chaque vol
-    results = []
-    for flight in flights[:limit]:
-        # Calculer l'impact
-        impact = await calculate_impact(flight)
-        
-        # Sauvegarder en MongoDB
-        impact_id = ObjectId()
-        doc = impact.model_dump()
-        doc["_id"] = impact_id
-        await get_db().impact.insert_one(doc)
-        
-        # Déclencher satellite (après sauvegarde)
-        if background_tasks:
-            background_tasks.add_task(trigger_satellite_tile, str(impact_id))
-        else:
-            await trigger_satellite_tile(str(impact_id))
-        
-        results.append({
-            "id": str(impact_id),
-            "flight_id": impact.flight_id,
-            "severity": impact.severity.value,
-            "impact_score": impact.impact_score
-        })
-    
-    return {"analyzed": len(results), "impacts": results}
 
 
 @router.get("/stats")

@@ -6,12 +6,10 @@ API GraphQL avec Strawberry.
 Strawberry transforme des classes Python en schema GraphQL automatiquement.
 """
 
-from datetime import datetime
 from typing import Optional
 import strawberry
 from bson import ObjectId
 
-from app.models.impact import FlightPosition
 from app.services.impact_calculator import calculate_impact
 from app.services.flight_client import get_flights
 from app.services.satellite_client import trigger_satellite_tile
@@ -29,16 +27,6 @@ class Impact:
     severity: str
     impact_score: float
     description: str
-
-
-@strawberry.input
-class PositionInput:
-    """Input pour calculer un impact."""
-    flight_id: str
-    latitude: float
-    longitude: float
-    altitude: float
-    callsign: Optional[str] = None
 
 
 # ============ HELPER ============
@@ -87,55 +75,15 @@ class Query:
 class Mutation:
 
     @strawberry.mutation
-    async def create_impact(self, position: PositionInput) -> Impact:
+    async def create_impacts(self, limit: int = 10) -> list[Impact]:
         """
-        Calcule et sauvegarde un impact pour une position.
-        
-        Flow:
-        1. Calcule l'impact météo
-        2. Sauvegarde en MongoDB
-        3. Déclenche la génération de tuile satellite
-        """
-        # Créer l'objet position
-        pos = FlightPosition(
-            flight_id=position.flight_id,
-            callsign=position.callsign,
-            latitude=position.latitude,
-            longitude=position.longitude,
-            altitude=position.altitude,
-            timestamp=datetime.utcnow()
-        )
-        
-        # Calculer l'impact (sans satellite)
-        impact = await calculate_impact(pos)
-        
-        # Sauvegarder en MongoDB
-        impact_id = ObjectId()
-        doc = impact.model_dump()
-        doc["_id"] = impact_id
-        await get_db().impact.insert_one(doc)
-        
-        # Déclencher satellite (après sauvegarde)
-        await trigger_satellite_tile(str(impact_id))
-        
-        return Impact(
-            id=str(impact_id),
-            flight_id=impact.flight_id,
-            callsign=impact.callsign,
-            severity=impact.severity.value,
-            impact_score=impact.impact_score,
-            description=impact.description
-        )
-
-    @strawberry.mutation
-    async def analyze_flights(self, limit: int = 10) -> list[Impact]:
-        """
-        Analyse les vols en temps réel.
+        Récupère les vols temps réel et crée des impacts.
         
         Flow pour chaque vol:
-        1. Calcule l'impact météo
-        2. Sauvegarde en MongoDB
-        3. Déclenche la génération de tuile satellite
+        1. Récupère les vols depuis flight-service
+        2. Calcule l'impact météo
+        3. Sauvegarde en MongoDB
+        4. Déclenche satellite-service
         """
         flights = await get_flights()
         results = []
