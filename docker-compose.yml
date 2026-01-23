@@ -18,7 +18,7 @@ services:
       - FLIGHT_SERVICE_URL=http://flight-service:5000
       - WEATHER_SERVICE_URL=http://weather-service:8080
       - SATELLITE_SERVICE_URL=http://satellite-service:8080
-      - WEATHER_INTERNAL_TOKEN=${WEATHER_INTERNAL_TOKEN:-}
+      - WEATHER_INTERNAL_TOKEN=secret-internal-token
       - USE_MOCK_WEATHER=true
       - USE_MOCK_SATELLITE=false
     depends_on:
@@ -36,8 +36,8 @@ services:
     environment:
       - APP_ENV=dev
       - APP_DEBUG=1
-      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY:-}
-      - INTERNAL_TOKEN=${WEATHER_INTERNAL_TOKEN:-}
+      - OPENWEATHER_API_KEY=728d27c984b8b3e53847db79697a23de
+      - INTERNAL_TOKEN=secret-internal-token
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     depends_on:
@@ -58,7 +58,7 @@ services:
       - SATELLITE_MINIO_ENDPOINT=http://minio:9000
       - SATELLITE_MINIO_ACCESSKEY=minioadmin
       - SATELLITE_MINIO_SECRETKEY=password
-      - SATELLITE_OWM_APIKEY=${OPENWEATHER_API_KEY:-728d27c984b8b3e53847db79697a23de}
+      - SATELLITE_OWM_APIKEY=728d27c984b8b3e53847db79697a23de
     depends_on:
       - mongo
       - minio
