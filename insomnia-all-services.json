@@ -269,13 +269,28 @@
       "_type": "request"
     },
     {
-      "_id": "req_weather_lyon",
+      "_id": "req_weather_readyz",
       "parentId": "fld_weather",
       "modified": 0,
       "created": 0,
-      "url": "http://localhost:8081/v1/onecall?lat=45.764&lon=4.8357",
-      "name": "3. GET Weather Lyon",
-      "description": "Météo à Lyon (nécessite API key payante)",
+      "url": "http://localhost:8081/readyz",
+      "name": "2. Readiness Check",
+      "description": "Vérifie que le service est prêt (Redis, etc.)",
+      "method": "GET",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 1,
+      "_type": "request"
+    },
+    {
+      "_id": "req_weather_paris",
+      "parentId": "fld_weather",
+      "modified": 0,
+      "created": 0,
+      "url": "http://localhost:8081/v1/onecall?lat=48.8566&lon=2.3522&units=metric&lang=en",
+      "name": "3. GET Weather Paris",
+      "description": "Météo complète à Paris",
       "method": "GET",
       "body": {},
       "headers": [
@@ -283,6 +298,23 @@
       ],
       "authentication": {},
       "metaSortKey": 2,
+      "_type": "request"
+    },
+    {
+      "_id": "req_weather_lyon",
+      "parentId": "fld_weather",
+      "modified": 0,
+      "created": 0,
+      "url": "http://localhost:8081/v1/onecall?lat=45.764&lon=4.8357&units=metric&lang=en",
+      "name": "4. GET Weather Lyon",
+      "description": "Météo complète à Lyon",
+      "method": "GET",
+      "body": {},
+      "headers": [
+        { "name": "X-Internal-Token", "value": "secret-internal-token" }
+      ],
+      "authentication": {},
+      "metaSortKey": 3,
       "_type": "request"
     },
     {
