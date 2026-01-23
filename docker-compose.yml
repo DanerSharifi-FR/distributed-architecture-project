@@ -36,7 +36,7 @@ services:
     environment:
       - APP_ENV=dev
       - APP_DEBUG=1
-      - OPENWEATHER_API_KEY=728d27c984b8b3e53847db79697a23de
+      - OPENWEATHER_API_KEY=8f08a8f93efcdb7a788a6cf8a8a0fb6b
       - INTERNAL_TOKEN=secret-internal-token
       - REDIS_URL=redis://redis:6379
       - REDIS_HOST=redis
@@ -59,7 +59,7 @@ services:
       - SATELLITE_MINIO_ENDPOINT=http://minio:9000
       - SATELLITE_MINIO_ACCESSKEY=minioadmin
       - SATELLITE_MINIO_SECRETKEY=password
-      - SATELLITE_OWM_APIKEY=728d27c984b8b3e53847db79697a23de
+      - SATELLITE_OWM_APIKEY=8f08a8f93efcdb7a788a6cf8a8a0fb6b
     depends_on:
       - mongo
       - minio
