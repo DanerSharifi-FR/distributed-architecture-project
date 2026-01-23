@@ -12,6 +12,7 @@ satellite:
     access-key: minioadmin
     bucket: satellite-test
     endpoint: http://localhost:9000
+    public-endpoint: http://localhost:9000
     secret-key: password
 
   OWM.api-key: 728d27c984b8b3e53847db79697a23de

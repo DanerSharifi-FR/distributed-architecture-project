@@ -12,7 +12,9 @@ import org.springframework.stereotype.Component
 class TileMapper(
     properties: SatelliteProperties,
 ) {
-    val apiUrl = properties.minio.endpoint
-    fun toTileDto(tile: SatelliteTile) = TileDto(tile.layers.mapValues { "$apiUrl/$it" })
+    val apiUrl = properties.minio.publicEndpoint
+    fun toTileDto(tile: SatelliteTile) = TileDto(tile.layers.mapValues { (_, file) ->
+        "$apiUrl/$file"
+    })
     fun toTile(impactId: ObjectId, layers: Layers) = SatelliteTile(impactId, layers)
 }

@@ -11,6 +11,7 @@ class SatelliteProperties(
         val accessKey: String,
         val bucket: String,
         val endpoint: String,
+        val publicEndpoint: String,
         val secretKey: String,
     )
 
