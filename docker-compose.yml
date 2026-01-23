@@ -5,6 +5,9 @@ services:
     build: ./flight-service
     ports:
       - "5001:5000"
+    environment:
+      - OPENSKY_CLIENT_ID=clovissssss-api-client
+      - OPENSKY_CLIENT_SECRET=2s5CYQkCGCY6fk8t9GaGXN0ljjzco64a
     networks:
       - app-network
 
