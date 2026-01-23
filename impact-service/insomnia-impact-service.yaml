@@ -1,0 +1,274 @@
+_type: export
+__export_format: 4
+__export_date: "2026-01-22T12:00:00.000Z"
+__export_source: "insomnia.desktop.app:v2024.5.0"
+resources:
+  - _id: wrk_impact_service
+    parentId: null
+    modified: 0
+    created: 0
+    name: "Impact Service API"
+    description: "API REST + GraphQL pour le calcul d'impacts météo aviation"
+    scope: collection
+    _type: workspace
+
+  - _id: env_base
+    parentId: wrk_impact_service
+    modified: 0
+    created: 0
+    name: "Base Environment"
+    data:
+      base_url: "http://localhost:8000"
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 0
+    _type: environment
+
+  # ==================== REST API ====================
+  - _id: fld_rest
+    parentId: wrk_impact_service
+    modified: 0
+    created: 0
+    name: "REST API"
+    description: "Endpoints REST"
+    _type: request_group
+
+  - _id: req_health
+    parentId: fld_rest
+    modified: 0
+    created: 0
+    url: "{{ _.base_url }}/api/health"
+    name: "Health Check"
+    description: "Vérifie l'état du service et de MongoDB"
+    method: GET
+    body: {}
+    headers:
+      - name: Accept
+        value: application/json
+    authentication: {}
+    metaSortKey: 0
+    _type: request
+
+  - _id: req_create_impact
+    parentId: fld_rest
+    modified: 0
+    created: 0
+    url: "{{ _.base_url }}/api/impacts"
+    name: "POST Create Impact"
+    description: "Crée un impact à partir d'une position de vol"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "flight_id": "AF1234",
+          "callsign": "AIR FRANCE 1234",
+          "latitude": 48.8566,
+          "longitude": 2.3522,
+          "altitude": 10000
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    authentication: {}
+    metaSortKey: 1
+    _type: request
+
+  - _id: req_list_impacts
+    parentId: fld_rest
+    modified: 0
+    created: 0
+    url: "{{ _.base_url }}/api/impacts"
+    name: "GET List Impacts"
+    description: "Liste tous les impacts (limit=50 par défaut)"
+    method: GET
+    body: {}
+    parameters:
+      - name: limit
+        value: "50"
+    headers:
+      - name: Accept
+        value: application/json
+    authentication: {}
+    metaSortKey: 2
+    _type: request
+
+  - _id: req_get_impact
+    parentId: fld_rest
+    modified: 0
+    created: 0
+    url: "{{ _.base_url }}/api/impacts/IMPACT_ID_HERE"
+    name: "GET Impact by ID"
+    description: "Récupère un impact par son ObjectId MongoDB"
+    method: GET
+    body: {}
+    headers:
+      - name: Accept
+        value: application/json
+    authentication: {}
+    metaSortKey: 3
+    _type: request
+
+  - _id: req_delete_impact
+    parentId: fld_rest
+    modified: 0
+    created: 0
+    url: "{{ _.base_url }}/api/impacts/IMPACT_ID_HERE"
+    name: "DELETE Impact"
+    description: "Supprime un impact"
+    method: DELETE
+    body: {}
+    headers: []
+    authentication: {}
+    metaSortKey: 4
+    _type: request
+
+  - _id: req_analyze_flights
+    parentId: fld_rest
+    modified: 0
+    created: 0
+    url: "{{ _.base_url }}/api/analyze-flights"
+    name: "POST Analyze Flights"
+    description: "Analyse les vols en temps réel depuis flight-service et crée des impacts"
+    method: POST
+    body: {}
+    parameters:
+      - name: limit
+        value: "10"
+    headers:
+      - name: Accept
+        value: application/json
+    authentication: {}
+    metaSortKey: 5
+    _type: request
+
+  - _id: req_stats
+    parentId: fld_rest
+    modified: 0
+    created: 0
+    url: "{{ _.base_url }}/api/stats"
+    name: "GET Stats"
+    description: "Statistiques sur les impacts"
+    method: GET
+    body: {}
+    headers:
+      - name: Accept
+        value: application/json
+    authentication: {}
+    metaSortKey: 6
+    _type: request
+
+  # ==================== GraphQL ====================
+  - _id: fld_graphql
+    parentId: wrk_impact_service
+    modified: 0
+    created: 0
+    name: "GraphQL"
+    description: "Requêtes GraphQL"
+    _type: request_group
+
+  - _id: req_gql_list_impacts
+    parentId: fld_graphql
+    modified: 0
+    created: 0
+    url: "{{ _.base_url }}/graphql"
+    name: "Query: List Impacts"
+    description: "Liste les impacts via GraphQL"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "query": "query { impacts(limit: 20) { id flightId callsign severity impactScore description } }"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    authentication: {}
+    metaSortKey: 0
+    _type: request
+
+  - _id: req_gql_get_impact
+    parentId: fld_graphql
+    modified: 0
+    created: 0
+    url: "{{ _.base_url }}/graphql"
+    name: "Query: Get Impact by ID"
+    description: "Récupère un impact par ID via GraphQL"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "query": "query { impact(id: \"IMPACT_ID_HERE\") { id flightId callsign severity impactScore description } }"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    authentication: {}
+    metaSortKey: 1
+    _type: request
+
+  - _id: req_gql_stats
+    parentId: fld_graphql
+    modified: 0
+    created: 0
+    url: "{{ _.base_url }}/graphql"
+    name: "Query: Stats"
+    description: "Statistiques via GraphQL"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "query": "query { stats }"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    authentication: {}
+    metaSortKey: 2
+    _type: request
+
+  - _id: req_gql_create_impact
+    parentId: fld_graphql
+    modified: 0
+    created: 0
+    url: "{{ _.base_url }}/graphql"
+    name: "Mutation: Create Impact"
+    description: "Crée un impact via GraphQL"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "query": "mutation { createImpact(position: { flightId: \"LH789\", callsign: \"LUFTHANSA 789\", latitude: 52.52, longitude: 13.405, altitude: 11000 }) { id flightId callsign severity impactScore description } }"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    authentication: {}
+    metaSortKey: 3
+    _type: request
+
+  - _id: req_gql_analyze_flights
+    parentId: fld_graphql
+    modified: 0
+    created: 0
+    url: "{{ _.base_url }}/graphql"
+    name: "Mutation: Analyze Flights"
+    description: "Analyse les vols en temps réel via GraphQL"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "query": "mutation { analyzeFlights(limit: 5) { id flightId severity impactScore } }"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    authentication: {}
+    metaSortKey: 4
+    _type: request

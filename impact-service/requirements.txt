@@ -1,17 +1,6 @@
-# FastAPI
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
-
-# GraphQL
 strawberry-graphql[fastapi]==0.217.1
-
-# MongoDB
-motor==3.3.2
-pymongo==4.6.1
-beanie==1.25.0
-
-# HTTP Client
+motor==3.6.0
 httpx==0.26.0
-
-# Config
 pydantic-settings==2.1.0

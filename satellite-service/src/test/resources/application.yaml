@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: archi
+
+  mongodb:
+    host: localhost
+    port: 27017
+    database: archi_project_test
+
+satellite:
+  minio:
+    access-key: minioadmin
+    bucket: satellite-test
+    endpoint: http://localhost:9000
+    secret-key: password
+
+  OWM.api-key: 728d27c984b8b3e53847db79697a23de
