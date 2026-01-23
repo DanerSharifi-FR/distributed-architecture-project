@@ -38,6 +38,7 @@ services:
       - APP_DEBUG=1
       - OPENWEATHER_API_KEY=728d27c984b8b3e53847db79697a23de
       - INTERNAL_TOKEN=secret-internal-token
+      - REDIS_URL=redis://redis:6379
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     depends_on:
