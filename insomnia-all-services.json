@@ -252,23 +252,6 @@
       "_type": "request"
     },
     {
-      "_id": "req_weather_paris",
-      "parentId": "fld_weather",
-      "modified": 0,
-      "created": 0,
-      "url": "http://localhost:8081/v1/onecall?lat=48.8566&lon=2.3522",
-      "name": "2. GET Weather Paris",
-      "description": "Météo à Paris (nécessite API key payante)",
-      "method": "GET",
-      "body": {},
-      "headers": [
-        { "name": "X-Internal-Token", "value": "secret-internal-token" }
-      ],
-      "authentication": {},
-      "metaSortKey": 1,
-      "_type": "request"
-    },
-    {
       "_id": "req_weather_readyz",
       "parentId": "fld_weather",
       "modified": 0,
