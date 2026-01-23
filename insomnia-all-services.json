@@ -247,7 +247,7 @@
         { "name": "lon", "value": "2.3522" }
       ],
       "headers": [
-        { "name": "X-Internal-Token", "value": "YOUR_INTERNAL_TOKEN" }
+        { "name": "X-Internal-Token", "value": "secret-internal-token" }
       ],
       "authentication": {},
       "metaSortKey": 1,
