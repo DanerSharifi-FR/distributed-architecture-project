@@ -12,7 +12,7 @@ Le service utilise OpenSky `GET /api/states/all` (snapshot “live” des positi
 
 - Python 3.10+ (recommandé)
 - Un accès Internet
-- (Optionnel) Un compte OpenSky + un **API client** si tu veux le mode authentifié (OAuth2). citeturn1view0turn1view1
+- (Optionnel) Un compte OpenSky + un **API client** pour le mode authentifié (OAuth2). citeturn1view0turn1view1
 
 ---
 
@@ -27,7 +27,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Ça démarre sur `http://localhost:5000`.
+Démarre sur `http://localhost:5000`.
 
 ---
 
@@ -56,16 +56,14 @@ curl -s "http://localhost:5000/flights?extended=1" | head
 
 ## Import Insomnia
 
-Importe le fichier YAML fourni :
+Importer le fichier YAML fourni :
 
 - `insomnia-opensky-flight-service.yaml`
 
-Puis lance :
+Puis lancer :
 - **GET flights (global)**
 - **GET flights (bbox Nantes)**
 - **GET flights (extended=1)**
-
-Aucune variable d’environnement n’est utilisée dans le fichier Insomnia (tout pointe sur `http://localhost:5000`).
 
 ---
 
@@ -125,7 +123,7 @@ Limites (OpenSky) :
 
 ### 2) Mode authentifié (OpenSky user / API client)
 
-Si tu utilises un compte OpenSky (ou API client), tu as : 
+Si utilisation d'un compte OpenSky (ou API client) : 
 - Quota : **4000 crédits / jour**
 - Historique : jusqu’à **1 heure** dans le passé (via `time`)
 - Résolution temporelle : **5 secondes**
@@ -133,12 +131,12 @@ Si tu utilises un compte OpenSky (ou API client), tu as :
 
 ### Rate limit / erreurs
 
-Quand tu dépasses la limite, OpenSky renvoie : 
+Quand on dépasse la limite, OpenSky renvoie : 
 - `429 Too Many Requests`
 - header `X-Rate-Limit-Retry-After-Seconds` (combien de secondes attendre)
 - header `X-Rate-Limit-Remaining` (crédits restants)
 
-Ton code gère un `429` en attendant puis en retentant une fois.
+le code gère un `429` en attendant puis en retentant une fois.
 
 ---
 
@@ -146,9 +144,9 @@ Ton code gère un `429` en attendant puis en retentant une fois.
 
 Deux options :
 
-1) **Ne mets pas** `OPENSKY_CLIENT_ID` / `OPENSKY_CLIENT_SECRET` dans ton environnement → le code n’ajoute pas `Authorization`.
+1) **Ne pas mettre** `OPENSKY_CLIENT_ID` / `OPENSKY_CLIENT_SECRET` dans l'environnement → le code n’ajoute pas `Authorization`.
 
-2) Si tu as ajouté le flag dans `app.py` :
+2) Ajouter le flag dans `app.py` :
 ```python
 FORCE_ANONYMOUS = True
 ```
@@ -158,7 +156,7 @@ Alors **même si** quelqu’un a des variables d’environnement, l’app rester
 
 ## Activer le mode authentifié (OAuth2)
 
-Si tu veux (et si ton code n’est pas forcé en anonyme), configure :
+Configurer :
 
 - `OPENSKY_CLIENT_ID`
 - `OPENSKY_CLIENT_SECRET`
