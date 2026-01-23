@@ -1,6 +1,6 @@
 _type: export
 __export_format: 4
-__export_date: "2026-01-22T12:00:00.000Z"
+__export_date: "2026-01-23T12:00:00.000Z"
 __export_source: "insomnia.desktop.app:v2024.5.0"
 resources:
   - _id: wrk_impact_service
@@ -50,26 +50,20 @@ resources:
     metaSortKey: 0
     _type: request
 
-  - _id: req_create_impact
+  - _id: req_create_impacts
     parentId: fld_rest
     modified: 0
     created: 0
     url: "{{ _.base_url }}/api/impacts"
-    name: "POST Create Impact"
-    description: "Crée un impact à partir d'une position de vol"
+    name: "POST Create Impacts (auto)"
+    description: "Récupère les vols temps réel depuis flight-service et crée des impacts"
     method: POST
-    body:
-      mimeType: application/json
-      text: |
-        {
-          "flight_id": "AF1234",
-          "callsign": "AIR FRANCE 1234",
-          "latitude": 48.8566,
-          "longitude": 2.3522,
-          "altitude": 10000
-        }
+    body: {}
+    parameters:
+      - name: limit
+        value: "5"
     headers:
-      - name: Content-Type
+      - name: Accept
         value: application/json
     authentication: {}
     metaSortKey: 1
@@ -124,25 +118,6 @@ resources:
     metaSortKey: 4
     _type: request
 
-  - _id: req_analyze_flights
-    parentId: fld_rest
-    modified: 0
-    created: 0
-    url: "{{ _.base_url }}/api/analyze-flights"
-    name: "POST Analyze Flights"
-    description: "Analyse les vols en temps réel depuis flight-service et crée des impacts"
-    method: POST
-    body: {}
-    parameters:
-      - name: limit
-        value: "10"
-    headers:
-      - name: Accept
-        value: application/json
-    authentication: {}
-    metaSortKey: 5
-    _type: request
-
   - _id: req_stats
     parentId: fld_rest
     modified: 0
@@ -156,7 +131,7 @@ resources:
       - name: Accept
         value: application/json
     authentication: {}
-    metaSortKey: 6
+    metaSortKey: 5
     _type: request
 
   # ==================== GraphQL ====================
@@ -231,44 +206,23 @@ resources:
     metaSortKey: 2
     _type: request
 
-  - _id: req_gql_create_impact
+  - _id: req_gql_create_impacts
     parentId: fld_graphql
     modified: 0
     created: 0
     url: "{{ _.base_url }}/graphql"
-    name: "Mutation: Create Impact"
-    description: "Crée un impact via GraphQL"
+    name: "Mutation: Create Impacts"
+    description: "Récupère les vols et crée des impacts via GraphQL"
     method: POST
     body:
       mimeType: application/json
       text: |
         {
-          "query": "mutation { createImpact(position: { flightId: \"LH789\", callsign: \"LUFTHANSA 789\", latitude: 52.52, longitude: 13.405, altitude: 11000 }) { id flightId callsign severity impactScore description } }"
+          "query": "mutation { createImpacts(limit: 5) { id flightId callsign severity impactScore description } }"
         }
     headers:
       - name: Content-Type
         value: application/json
     authentication: {}
     metaSortKey: 3
-    _type: request
-
-  - _id: req_gql_analyze_flights
-    parentId: fld_graphql
-    modified: 0
-    created: 0
-    url: "{{ _.base_url }}/graphql"
-    name: "Mutation: Analyze Flights"
-    description: "Analyse les vols en temps réel via GraphQL"
-    method: POST
-    body:
-      mimeType: application/json
-      text: |
-        {
-          "query": "mutation { analyzeFlights(limit: 5) { id flightId severity impactScore } }"
-        }
-    headers:
-      - name: Content-Type
-        value: application/json
-    authentication: {}
-    metaSortKey: 4
     _type: request
