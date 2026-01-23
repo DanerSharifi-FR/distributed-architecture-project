@@ -14,5 +14,5 @@ class TileMapper(
 ) {
     val apiUrl = properties.minio.endpoint
     fun toTileDto(tile: SatelliteTile) = TileDto(tile.layers.mapValues { "$apiUrl/$it" })
-    fun toTile(layers: Layers) = SatelliteTile(ObjectId(), layers)
+    fun toTile(impactId: ObjectId, layers: Layers) = SatelliteTile(impactId, layers)
 }

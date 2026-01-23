@@ -24,7 +24,7 @@ class SatelliteService(
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Impact with id $id not found")
         val layers = impact.position.run { owmService.getTileLayersPicture(latitude, longitude) }
             .mapValues { (layer, picture) -> fileService.putTileLayerPicture(impactId, layer, picture)}
-        val tile: SatelliteTile = tileMapper.toTile(layers)
+        val tile: SatelliteTile = tileMapper.toTile(id, layers)
         satelliteTileRepository.save(tile)
         return tileMapper.toTileDto(tile)
     }
